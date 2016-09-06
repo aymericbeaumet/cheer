@@ -18,7 +18,6 @@ export function tokenize(buffer, options = {}) {
       }
     }
   }
-  console.log(tokens)
   return tokens
 }
 
@@ -31,7 +30,7 @@ export class Token {
 export class DoToken extends Token {
   static from(buffer, pointer) {
     const match = buffer.substring(pointer.index).match(/^<!-{2,}[\s]*DO[\s]+([a-zA-Z_][\w]*)[\s]*\((.*)\)[\s]*-{2,}>/)
-    if (!match) {
+    if (!(match && match.length === 3)) {
       return null
     }
     const [ raw, source, args ] = match
@@ -47,7 +46,7 @@ export class DoToken extends Token {
 export class DoneToken extends Token {
   static from(buffer, pointer) {
     const match = buffer.substring(pointer.index).match(/^<!-{2,}[\s]*DONE[\s]*-{2,}>/)
-    if (!match) {
+    if (!(match && match.length === 1)) {
       return null
     }
     const [ raw ] = match
