@@ -6,8 +6,10 @@ const cli = meow(`
     $ cheer [options] file...
 
   Options
-    --dry-run Do not change any file, write the modifications to stdout
-    --lint    Do not change any file, exit with an error code if the files are outdated
+    --dry-run       Do not modify the files, but print the modifications to stderr and exit
+    --lint          Do not modify the files, but lint them and exit with an error code if the files are outdated
+    --print-ast     Print the AST nodes to stderr and exit
+    --print-tokens  Print the Lexer tokens to stderr and exit
 
   Example
     $ cheer readme.md
@@ -20,7 +22,7 @@ if (!(cli.input.length > 0)) {
 
 export default fromFiles(cli.input, cli.flags)
   .then(function onFinished(results) {
-    // console.log(results)
+    console.log(results)
   })
   .catch(function onError(error) {
     console.error(error)

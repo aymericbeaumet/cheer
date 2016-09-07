@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { dirname, resolve } from 'path'
+import { inspect } from 'util'
 import { map, promisify } from 'bluebird'
 import { tokenize } from './lexer'
 import { createAst } from './parser'
@@ -40,7 +41,17 @@ export async function fromFile(file, {
 export async function fromBuffer(buffer, {
   cwd = process.cwd(),
   linebreak = '\n',
+  printAst = false,
+  printTokens = false,
 } = {}) {
   const tokens = tokenize(buffer.toString())
+  if (printTokens) {
+    console.error(inspect(tokens, { colors: true }))
+    process.exit(0)
+  }
   const ast = createAst(tokens)
+  if (printAst) {
+    console.error(inspect(ast, { colors: true, depth: 4 }))
+    process.exit(0)
+  }
 }

@@ -3,8 +3,9 @@ import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from '.
 /**
  * Create an AST following this EBNF:
  *
- *   FileContentNode = { ExpressionsBlockNode | StringToken | EOLToken }, EOFToken ;
- *   ExpressionsBlockNode = ExpressionToken, { ExpressionToken | EOLToken }, { StringToken | EOLToken }, ReturnToken ;
+ *   FileContentNode = { ExpressionsBlockNode | StringNode }, EOFToken ;
+ *   ExpressionsBlockNode = ExpressionToken, { ExpressionToken | EOLToken }, { StringNode }, ReturnToken ;
+ *   StringNode = StringToken | EOLToken;
  */
 export function createAst(tokens, options) {
   const cursor = { index: 0 }
@@ -26,10 +27,8 @@ export class FileContentNode extends Node {
     const nodes = []
     let node
     while (tokens[cursor.index]) {
-      if (node = ExpressionsBlockNode.from(tokens, cursor)) {
+      if ((node = ExpressionsBlockNode.from(tokens, cursor)) || (node = StringNode.from(tokens, cursor))) {
         nodes.push(node)
-      } else if (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
-        nodes.push(tokens[cursor.index++])
       } else {
         break
       }
@@ -59,14 +58,25 @@ export class ExpressionsBlockNode extends Node {
       }
       cursor.index++
     }
-    while (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
-      cursor.index++
-    }
+    while (StringNode.from(tokens, cursor)) {}
     if (!(tokens[cursor.index++] instanceof ReturnToken)) {
       throw new Error(`[Parser] Expected ReturnToken, but token:${cursor.index} is ${tokens[cursor.index]}`)
     }
     return new ExpressionsBlockNode({
       expressions,
     })
+  }
+}
+
+/**
+ */
+export class StringNode extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    if (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
+      return new StringNode({
+        value: tokens[cursor.index++].toString(),
+      })
+    }
+    return null
   }
 }
