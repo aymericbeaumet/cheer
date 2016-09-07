@@ -1,8 +1,8 @@
 import { transform } from 'babel-core'
 
 /**
- * Leverage the Babel toolchain to:
- *   - transform the pipe binary operator between CallExpression to `.pipe()`
+ * Leverage the Babel toolchain to apply several transformations. See the
+ * plugins documentation below.
  * @param {String} expression - the expression to expand
  * @return {String} - the expanded expression
  */
@@ -17,6 +17,10 @@ export function expand(expression) {
   }).code
 }
 
+/**
+ * Tranform the `|` binary operator between two CallExpression's to a `.pipe()`
+ * call.
+ */
 function babelPluginPipeOperatorToPipeExpression({ types: t }) {
   return {
     visitor: {
