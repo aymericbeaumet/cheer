@@ -11,7 +11,7 @@ It should understand multiline arguments:
 1
 `, {
   test: 'ok',
-}) | format | printf --><!-- cheer: return -->
+}) | format() | printf() --><!-- cheer: return -->
 
 It should understand when never galvanized (without newline):
 

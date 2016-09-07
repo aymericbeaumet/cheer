@@ -26,7 +26,9 @@ function babelPluginPipeOperatorToPipeExpression({ types: t }) {
     visitor: {
       BinaryExpression: {
         exit(path) {
-          if (t.isBinaryExpression(path.node, { operator: '|' })) {
+          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
+              t.isCallExpression(path.node.left) &&
+              t.isCallExpression(path.node.right)) {
             path.replaceWith(t.callExpression(
               // callee
               t.memberExpression(
