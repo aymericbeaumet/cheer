@@ -73,6 +73,13 @@ export class ExpressionToken extends Token {
       expression
     })
   }
+
+  toObject() {
+    return {
+      label: this.label,
+      expression: this.expression,
+    }
+  }
 }
 
 /**

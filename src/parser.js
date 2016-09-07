@@ -1,3 +1,4 @@
+import { last } from 'lodash'
 import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from './lexer'
 
 /**
@@ -27,8 +28,15 @@ export class FileContentNode extends Node {
     const nodes = []
     let node
     while (tokens[cursor.index]) {
-      if ((node = ExpressionsBlockNode.from(tokens, cursor)) || (node = StringNode.from(tokens, cursor))) {
+      if (node = ExpressionsBlockNode.from(tokens, cursor)) {
         nodes.push(node)
+      } else if (node = StringNode.from(tokens, cursor)) {
+        const lastNode = last(nodes)
+        if (lastNode instanceof StringNode) {
+          lastNode.append(node)
+        } else {
+          nodes.push(node)
+        }
       } else {
         break
       }
@@ -48,13 +56,13 @@ export class ExpressionsBlockNode extends Node {
   static from(tokens, cursor = { index: 0 }) {
     const expressions = []
     if (tokens[cursor.index] instanceof ExpressionToken) {
-      expressions.push(tokens[cursor.index++])
+      expressions.push(tokens[cursor.index++].toObject())
     } else {
       return null
     }
     while (tokens[cursor.index] instanceof ExpressionToken || tokens[cursor.index] instanceof EOLToken) {
       if (tokens[cursor.index] instanceof ExpressionToken) {
-        expressions.push(tokens[cursor.index])
+        expressions.push(tokens[cursor.index].toObject())
       }
       cursor.index++
     }
@@ -78,5 +86,9 @@ export class StringNode extends Node {
       })
     }
     return null
+  }
+
+  append(node) {
+    this.value += node.value
   }
 }
