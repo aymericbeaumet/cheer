@@ -1,38 +1,31 @@
 It should understand source with no arguments:
-<!-- DO js() --><!-- DONE -->
+<!-- cheer: printf() --><!-- cheer: return -->
 
 It should understand parentheses in arguments:
-<!-- DO js("console.log('cheer')") --><!-- DONE -->
+<!-- cheer: printf(")") --><!-- cheer: return -->
 
-It should understand end of placeholder in arguments:
-<!-- DO js("console.log(') -->')") --><!-- DONE -->
+It should understand multiline arguments:
+<!-- cheer: printf(`
+1
++
+1
+`, {
+  test: 'ok',
+}) | format --><!-- cheer: return -->
 
-It should understand DONEs which were never galvanized (without newline):
+It should understand when never galvanized (without newline):
 
-<!-- DO js("console.log('cheer')") --><!-- DONE -->
+<!-- cheer: printf('foobar') --><!-- cheer: return -->
 
-It should understand DONEs which were never galvanized (with newline):
+It should understand when never galvanized (with newline):
 
-<!-- DO js("console.log('cheer')") -->
-<!-- DONE -->
+<!-- cheer: printf('foobar') -->
+<!-- cheer: return -->
 
-It should understand DONEs which were already galvanized:
+It should understand when already galvanized:
 
-<!-- DO js("console.log('cheer')") -->
+<!-- cheer: printf('foobar') -->
+<!-- cheer: printf('barfoo') -->
 foobar
-<!-- DONE -->
-
-It should undertand nested DONEs and only galvanize the outter ones:
-
-<!-- DO js("console.log('cheer')") -->
-<!-- DO js("console.log('cheer')") -->
-<!-- DONE -->
-<!-- DONE -->
-
-<!-- DO js("console.log('cheer')") -->
-<!-- DO js("console.log('cheer')") -->
-<!-- DONE -->
-
-<!-- DO js("console.log('cheer')") -->
-<!-- DONE -->
-<!-- DONE -->
+barfoo
+<!-- cheer: return -->

@@ -2,6 +2,7 @@ import fs from 'fs'
 import { dirname, resolve } from 'path'
 import { map, promisify } from 'bluebird'
 import { tokenize } from './lexer'
+import { parse } from './parser'
 
 const readFile = promisify(fs.readFile)
 

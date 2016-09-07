@@ -2,69 +2,82 @@ import { last } from 'lodash'
 
 export function tokenize(buffer, options = {}) {
   const tokens = []
-  const pointer = { index: 0 }
+  const cursor = { index: 0 }
   let token = null
-  while (pointer.index < buffer.length) {
-    if (token = DoToken.from(buffer, pointer)) {
+  while (cursor.index < buffer.length) {
+    if (token = ExpressionToken.from(buffer, cursor)) {
       tokens.push(token)
-    } else if (token = DoneToken.from(buffer, pointer)) {
+    } else if (token = ReturnToken.from(buffer, cursor)) {
       tokens.push(token)
     } else {
       const lastToken = last(tokens)
       if (lastToken instanceof StringToken) {
-        lastToken.append(buffer, pointer)
+        lastToken.append(buffer, cursor)
       } else {
-        tokens.push(StringToken.from(buffer, pointer))
+        tokens.push(StringToken.from(buffer, cursor))
       }
     }
   }
   return tokens
 }
 
+/**
+ */
 export class Token {
   constructor(...args) {
     Object.assign(this, ...args)
   }
+
+  toString() {
+    return this.raw.toString()
+  }
 }
 
-export class DoToken extends Token {
-  static from(buffer, pointer) {
-    const match = buffer.substring(pointer.index).match(/^<!-{2,}[\s]*DO[\s]+([a-zA-Z_][\w]*)[\s]*\((.*)\)[\s]*-{2,}>/)
+/**
+ */
+export class ExpressionToken extends Token {
+  static from(buffer, cursor = { index: 0 }) {
+    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*\([\s\S]+?)[\s]*-{2,}>/)
     if (!(match && match.length === 3)) {
       return null
     }
-    const [ raw, source, args ] = match
-    pointer.index += raw.length
-    return new DoToken({
+    const [ raw, label, expression ] = match
+    cursor.index += raw.length
+    return new ExpressionToken({
       raw,
-      source,
-      args: JSON.parse(`[ ${args} ]`),
+      label,
+      expression
     })
   }
 }
 
-export class DoneToken extends Token {
-  static from(buffer, pointer) {
-    const match = buffer.substring(pointer.index).match(/^<!-{2,}[\s]*DONE[\s]*-{2,}>/)
-    if (!(match && match.length === 1)) {
+/**
+ */
+export class ReturnToken extends Token {
+  static from(buffer, cursor = { index: 0 }) {
+    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*return[\s]*-{2,}>/)
+    if (!(match && match.length === 2)) {
       return null
     }
-    const [ raw ] = match
-    pointer.index += raw.length
-    return new DoneToken({
+    const [ raw, label ] = match
+    cursor.index += raw.length
+    return new ReturnToken({
       raw,
+      label,
     })
   }
 }
 
+/**
+ */
 export class StringToken extends Token {
-  static from(buffer, pointer) {
+  static from(buffer, cursor = { index: 0 }) {
     return new StringToken({
-      raw: buffer[pointer.index++],
+      raw: buffer[cursor.index++],
     })
   }
 
-  append(buffer, pointer) {
-    this.raw += buffer[pointer.index++]
+  append(buffer, cursor) {
+    this.raw += buffer[cursor.index++]
   }
 }
