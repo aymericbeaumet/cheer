@@ -13,10 +13,16 @@ const cli = meow(`
     $ cheer readme.md
 `)
 
+if (!(cli.input.length > 0)) {
+  cli.usage()
+  process.exit(1)
+}
+
 export default fromFiles(cli.input, cli.flags)
   .then(function onFinished(results) {
     // console.log(results)
   })
   .catch(function onError(error) {
     console.error(error)
+    process.exit(1)
   })

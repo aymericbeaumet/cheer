@@ -1,46 +1,72 @@
-import { ExpressionToken, ReturnToken, StringToken } from './lexer'
-import raw from './plugins/sources/cheer-plugin-source-raw.js'
+import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from './lexer'
 
-export function createSources(tokens, options) {
-  const sources = []
-  let index = 0
-  while (tokens[index]) {
-    if (tokens[index] instanceof ReturnToken) {
-      throw new Error(`Do not expect an isolated ReturnToken: "${tokens[index]}"`)
-    }
-    if (tokens[index] instanceof StringToken) {
-      sources.push(sourceFromStringToken(tokens[index++], options))
-    } else if (tokens[index] instanceof ExpressionToken) {
-      const expressions = [ tokens[index++] ]
-      let returnExpected = false
-      while (tokens[index]) {
-        if (tokens[index] instanceof ReturnToken) {
-          break
-        } else if (returnExpected) {
-          throw new Error(`A ReturnToken was expected instead of: "${tokens[index]}"`)
-        }
-        while (tokens[index] instanceof ExpressionToken || (tokens[index] instanceof StringToken && trim(tokens[index].raw, ` ${linebreak}`).length === 0)) {
-          if (tokens[index] instanceof ExpressionToken) {
-            expressions.push(tokens[index])
-          }
-          index++
-        }
-        while (tokens[index++] instanceof StringToken) {}
-        returnExpected = true
+/**
+ * Create an AST following this EBNF:
+ *
+ *   FileContentNode = { ExpressionsBlockNode | StringToken | EOLToken }, EOFToken ;
+ *   ExpressionsBlockNode = ExpressionToken, { ExpressionToken | EOLToken }, { StringToken | EOLToken }, ReturnToken ;
+ */
+export function createAst(tokens, options) {
+  const cursor = { index: 0 }
+  return FileContentNode.from(tokens, cursor)
+}
+
+/**
+ */
+export class Node {
+  constructor(...args) {
+    Object.assign(this, ...args)
+  }
+}
+
+/**
+ */
+export class FileContentNode extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    const nodes = []
+    let node
+    while (tokens[cursor.index]) {
+      if (node = ExpressionsBlockNode.from(tokens, cursor)) {
+        nodes.push(node)
+      } else if (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
+        nodes.push(tokens[cursor.index++])
+      } else {
+        break
       }
-      sources.push(sourceFromExpressionTokens(expressions, options))
     }
+    if (!(tokens[cursor.index] instanceof EOFToken)) {
+      throw new Error(`[Parser] Expected EOF, but token:${cursor.index} is ${tokens[cursor.index]}`)
+    }
+    return new FileContentNode({
+      nodes,
+    })
   }
-  return sources
 }
 
-export function sourceFromStringToken(token, options) {
-  return function source() {
-    return raw(options)(token.raw)
-  }
-}
-
-export function sourceFromExpressionTokens(tokens, options) {
-  return function source() {
+/**
+ */
+export class ExpressionsBlockNode extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    const expressions = []
+    if (tokens[cursor.index] instanceof ExpressionToken) {
+      expressions.push(tokens[cursor.index++])
+    } else {
+      return null
+    }
+    while (tokens[cursor.index] instanceof ExpressionToken || tokens[cursor.index] instanceof EOLToken) {
+      if (tokens[cursor.index] instanceof ExpressionToken) {
+        expressions.push(tokens[cursor.index])
+      }
+      cursor.index++
+    }
+    while (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
+      cursor.index++
+    }
+    if (!(tokens[cursor.index++] instanceof ReturnToken)) {
+      throw new Error(`[Parser] Expected ReturnToken, but token:${cursor.index} is ${tokens[cursor.index]}`)
+    }
+    return new ExpressionsBlockNode({
+      expressions,
+    })
   }
 }

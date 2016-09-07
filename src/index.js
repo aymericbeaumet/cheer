@@ -2,7 +2,7 @@ import fs from 'fs'
 import { dirname, resolve } from 'path'
 import { map, promisify } from 'bluebird'
 import { tokenize } from './lexer'
-import { createSources } from './parser'
+import { createAst } from './parser'
 
 const readFile = promisify(fs.readFile)
 
@@ -42,6 +42,5 @@ export async function fromBuffer(buffer, {
   linebreak = '\n',
 } = {}) {
   const tokens = tokenize(buffer.toString())
-  const sources = createSources(tokens, { linebreak })
-  console.log(sources)
+  const ast = createAst(tokens)
 }

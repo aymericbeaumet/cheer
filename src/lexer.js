@@ -9,6 +9,8 @@ export function tokenize(buffer, options = {}) {
       tokens.push(token)
     } else if (token = ReturnToken.from(buffer, cursor)) {
       tokens.push(token)
+    } else if (token = EOLToken.from(buffer, cursor)) {
+      tokens.push(token)
     } else {
       const lastToken = last(tokens)
       if (lastToken instanceof StringToken) {
@@ -18,6 +20,7 @@ export function tokenize(buffer, options = {}) {
       }
     }
   }
+  tokens.push(new EOFToken())
   return tokens
 }
 
@@ -31,6 +34,27 @@ export class Token {
   toString() {
     return this.raw.toString()
   }
+}
+
+/**
+ */
+export class EOLToken extends Token {
+  static from(buffer, cursor = { index: 0 }) {
+    const match = buffer.substring(cursor.index).match(/^(?:\r\n|\r|\n)/)
+    if (!(match && match.length === 1)) {
+      return null
+    }
+    const [ raw ] = match
+    cursor.index += raw.length
+    return new EOLToken({
+      raw,
+    })
+  }
+}
+
+/**
+ */
+export class EOFToken extends Token {
 }
 
 /**
