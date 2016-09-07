@@ -1,4 +1,5 @@
 import { last } from 'lodash'
+import { expand } from './expression'
 
 export function tokenize(buffer, options = {}) {
   const tokens = []
@@ -70,7 +71,7 @@ export class ExpressionToken extends Token {
     return new ExpressionToken({
       raw,
       label,
-      expression
+      expression: expand(expression),
     })
   }
 
