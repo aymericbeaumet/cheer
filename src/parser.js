@@ -2,7 +2,8 @@ import { last } from 'lodash'
 import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from './lexer'
 
 /**
- * Create an AST following this EBNF:
+ * Create an AST following this EBNF, all the tokens are emitted by the lexer
+ * and are terminal:
  *
  *   File = { BlockStatement | StringLiteral }, EOFToken ;
  *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnStatement ;
