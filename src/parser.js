@@ -5,7 +5,9 @@ import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from '.
  * Create an AST following this EBNF:
  *
  *   File = { BlockStatement | StringLiteral }, EOFToken ;
- *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnToken ;
+ *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnStatement ;
+ *   ExpressionStatement = ExpressionToken ;
+ *   ReturnStatement = ReturnToken ;
  *   StringLiteral = StringToken | EOLToken;
  */
 export function createAst(tokens, options) {
