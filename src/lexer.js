@@ -2,15 +2,13 @@ import { last } from 'lodash'
 import { expand } from './expression'
 
 export function tokenize(buffer, options = {}) {
-  const tokens = []
   const cursor = { index: 0 }
+  const tokens = []
   let token = null
   while (cursor.index < buffer.length) {
-    if (token = ExpressionToken.from(buffer, cursor)) {
-      tokens.push(token)
-    } else if (token = ReturnToken.from(buffer, cursor)) {
-      tokens.push(token)
-    } else if (token = EOLToken.from(buffer, cursor)) {
+    if ((token = ExpressionToken.from(buffer, cursor)) ||
+        (token = ReturnToken.from(buffer, cursor)) ||
+        (token = EOLToken.from(buffer, cursor))) {
       tokens.push(token)
     } else {
       const lastToken = last(tokens)
@@ -20,6 +18,9 @@ export function tokenize(buffer, options = {}) {
         tokens.push(StringToken.from(buffer, cursor))
       }
     }
+  }
+  if (cursor.index !== buffer.length) {
+    throw new Error(`[Lexer] Cursor index (${cursor.index}) is not equal to the buffer length (${buffer.length})`)
   }
   tokens.push(new EOFToken())
   return tokens
@@ -67,19 +68,17 @@ export class ExpressionToken extends Token {
       return null
     }
     const [ raw, label, expression ] = match
+    // TODO: find a meaningful reason to allow the users to specify their own
+    // label, for now ignore the entire token if different from 'cheer'
+    if (label !== 'cheer') {
+      return null
+    }
     cursor.index += raw.length
     return new ExpressionToken({
       raw,
       label,
       expression: expand(expression),
     })
-  }
-
-  toObject() {
-    return {
-      label: this.label,
-      expression: this.expression,
-    }
   }
 }
 
@@ -92,6 +91,11 @@ export class ReturnToken extends Token {
       return null
     }
     const [ raw, label ] = match
+    // TODO: find a meaningful reason to allow the users to specify their own
+    // label, for now ignore the entire token if different from 'cheer'
+    if (label !== 'cheer') {
+      return null
+    }
     cursor.index += raw.length
     return new ReturnToken({
       raw,

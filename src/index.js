@@ -46,12 +46,12 @@ export async function fromBuffer(buffer, {
 } = {}) {
   const tokens = tokenize(buffer.toString())
   if (printTokens) {
-    console.error(inspect(tokens, { colors: true }))
+    console.error(inspect(tokens, { colors: true, depth: Infinity }))
     process.exit(0)
   }
   const ast = createAst(tokens)
   if (printAst) {
-    console.error(inspect(ast, { colors: true, depth: 4 }))
+    console.error(inspect(ast, { colors: true, depth: Infinity }))
     process.exit(0)
   }
 }

@@ -4,13 +4,13 @@ import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from '.
 /**
  * Create an AST following this EBNF:
  *
- *   FileContentNode = { ExpressionsBlockNode | StringNode }, EOFToken ;
- *   ExpressionsBlockNode = ExpressionToken, { ExpressionToken | EOLToken }, { StringNode }, ReturnToken ;
- *   StringNode = StringToken | EOLToken;
+ *   File = { BlockStatement | StringLiteral }, EOFToken ;
+ *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnToken ;
+ *   StringLiteral = StringToken | EOLToken;
  */
 export function createAst(tokens, options) {
   const cursor = { index: 0 }
-  return FileContentNode.from(tokens, cursor)
+  return File.from(tokens, cursor)
 }
 
 /**
@@ -23,19 +23,19 @@ export class Node {
 
 /**
  */
-export class FileContentNode extends Node {
+export class File extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    const nodes = []
+    const body = []
     let node
     while (tokens[cursor.index]) {
-      if (node = ExpressionsBlockNode.from(tokens, cursor)) {
-        nodes.push(node)
-      } else if (node = StringNode.from(tokens, cursor)) {
-        const lastNode = last(nodes)
-        if (lastNode instanceof StringNode) {
+      if (node = BlockStatement.from(tokens, cursor)) {
+        body.push(node)
+      } else if (node = StringLiteral.from(tokens, cursor)) {
+        const lastNode = last(body)
+        if (lastNode instanceof StringLiteral) {
           lastNode.append(node)
         } else {
-          nodes.push(node)
+          body.push(node)
         }
       } else {
         break
@@ -44,44 +44,79 @@ export class FileContentNode extends Node {
     if (!(tokens[cursor.index] instanceof EOFToken)) {
       throw new Error(`[Parser] Expected EOF, but token:${cursor.index} is ${tokens[cursor.index]}`)
     }
-    return new FileContentNode({
-      nodes,
+    return new File({
+      body,
     })
   }
 }
 
 /**
  */
-export class ExpressionsBlockNode extends Node {
+export class BlockStatement extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    const expressions = []
-    if (tokens[cursor.index] instanceof ExpressionToken) {
-      expressions.push(tokens[cursor.index++].toObject())
-    } else {
+    const body = []
+    let node = null
+    if (!(node = ExpressionStatement.from(tokens, cursor))) {
       return null
     }
-    while (tokens[cursor.index] instanceof ExpressionToken || tokens[cursor.index] instanceof EOLToken) {
-      if (tokens[cursor.index] instanceof ExpressionToken) {
-        expressions.push(tokens[cursor.index].toObject())
+    body.push(node)
+    while ((node = ExpressionStatement.from(tokens, cursor) ||
+           (node = tokens[cursor.index] instanceof EOLToken))) {
+      if (node instanceof ExpressionStatement) {
+        body.push(node)
+      } else {
+        cursor.index++
       }
-      cursor.index++
     }
-    while (StringNode.from(tokens, cursor)) {}
-    if (!(tokens[cursor.index++] instanceof ReturnToken)) {
+    while (StringLiteral.from(tokens, cursor)) {}
+    if (!(node = ReturnStatement.from(tokens, cursor))) {
       throw new Error(`[Parser] Expected ReturnToken, but token:${cursor.index} is ${tokens[cursor.index]}`)
     }
-    return new ExpressionsBlockNode({
-      expressions,
+    body.push(node)
+    return new BlockStatement({
+      body,
     })
   }
 }
 
 /**
  */
-export class StringNode extends Node {
+export class ExpressionStatement extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    if (tokens[cursor.index] instanceof StringToken || tokens[cursor.index] instanceof EOLToken) {
-      return new StringNode({
+    if (!(tokens[cursor.index] instanceof ExpressionToken)) {
+      return null
+    }
+    const { raw, label, expression } = tokens[cursor.index++]
+    return new ExpressionStatement({
+      raw,
+      label,
+      expression,
+    })
+  }
+}
+
+/**
+ */
+export class ReturnStatement extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    if (!(tokens[cursor.index] instanceof ReturnToken)) {
+      return null
+    }
+    const { raw, label } = tokens[cursor.index++]
+    return new ReturnStatement({
+      raw,
+      label,
+    })
+  }
+}
+
+/**
+ */
+export class StringLiteral extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    if (tokens[cursor.index] instanceof StringToken ||
+        tokens[cursor.index] instanceof EOLToken) {
+      return new StringLiteral({
         value: tokens[cursor.index++].toString(),
       })
     }

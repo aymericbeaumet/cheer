@@ -12,16 +12,32 @@ export function expand(expression) {
     comments: false,
     compact: true,
     plugins: [
-      babelPluginPipeOperatorToPipeExpression,
+      identifierToCallExpression,
+      binaryExpressionToCallExpression,
     ],
   }).code
 }
 
 /**
- * Tranform the `|` binary operator between two CallExpression's to a `.pipe()`
- * call.
+ * Transform the Identifier's which are not callee of a CallExpression into a
+ * CallExpression. Syntactic sugar for `a.pipe(b).pipe(c)` instead of `a().pipe(b()).pipe(c())`
  */
-function babelPluginPipeOperatorToPipeExpression({ types: t }) {
+function identifierToCallExpression({ types: t }) {
+  return {
+    visitor: {
+      Identifier: {
+        enter(path) {
+        },
+      },
+    },
+  }
+}
+
+/**
+ * Tranform the `|` binary operator between two CallExpression's to a `.pipe()`
+ * call. Syntactic sugar for `a() | b() | c()` instead of `a().pipe(b()).pipe(c())`
+ */
+function binaryExpressionToCallExpression({ types: t }) {
   return {
     visitor: {
       BinaryExpression: {
