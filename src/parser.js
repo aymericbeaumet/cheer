@@ -8,7 +8,7 @@ import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from '.
  *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnStatement ;
  *   ExpressionStatement = ExpressionToken ;
  *   ReturnStatement = ReturnToken ;
- *   StringLiteral = StringToken | EOLToken;
+ *   StringLiteral = StringToken | EOLToken ;
  */
 export function createAst(tokens, options) {
   const cursor = { index: 0 }
