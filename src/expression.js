@@ -11,6 +11,7 @@ export function expand(expression) {
     babelrc: false,
     comments: false,
     compact: true,
+    sourceMaps: 'inline',
     plugins: [
       identifierToCallExpression,
       binaryExpressionToCallExpression,
