@@ -6,8 +6,8 @@ export function tokenize(buffer, options = {}) {
   const tokens = []
   let token = null
   while (cursor.index < buffer.length) {
-    if ((token = ExpressionToken.from(buffer, cursor)) ||
-        (token = ReturnToken.from(buffer, cursor)) ||
+    if ((token = ReturnToken.from(buffer, cursor)) ||
+        (token = ExpressionToken.from(buffer, cursor)) ||
         (token = EOLToken.from(buffer, cursor))) {
       tokens.push(token)
     } else {
@@ -63,7 +63,7 @@ export class EOFToken extends Token {
  */
 export class ExpressionToken extends Token {
   static from(buffer, cursor = { index: 0 }) {
-    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*\([\s\S]+?)[\s]*-{2,}>/)
+    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*[\s\S]+?)[\s]*-{2,}>/)
     if (!(match && match.length === 3)) {
       return null
     }

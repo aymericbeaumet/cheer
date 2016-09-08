@@ -6,10 +6,10 @@ const cli = meow(`
     $ cheer [options] file...
 
   Options
-    --dry-run       Do not modify the files, but print the modifications to stderr and exit
+    --dry-run       Do not modify the files, but print the modifications to stdout and exit
     --lint          Do not modify the files, but lint them and exit with an error code if the files are outdated
-    --print-ast     Print the AST nodes to stderr and exit
-    --print-tokens  Print the Lexer tokens to stderr and exit
+    --print-ast     Print the AST nodes to stdout and exit
+    --print-tokens  Print the Lexer tokens to stdout and exit
 
   Example
     $ cheer readme.md
