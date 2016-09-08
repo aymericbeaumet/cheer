@@ -2,6 +2,9 @@
   "name": "cheer",
   "version": "0.0.1",
   "description": "Galvanize your markdown files",
+  "files": [
+    "lib"
+  ],
   "main": "lib/index.js",
   "bin": "lib/cli.js",
   "scripts": {
