@@ -3,7 +3,7 @@ import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from '.
 
 /**
  * Create an AST following this EBNF, all the tokens are emitted by the lexer
- * and are terminal:
+ * and are terminal in this grammar:
  *
  *   File = { BlockStatement | StringLiteral }, EOFToken ;
  *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnStatement ;
