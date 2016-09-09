@@ -19,12 +19,12 @@ async function interpret(node, options) {
     const returnStatements = node.body.filter(child => child instanceof ReturnStatement)
     return [
       ...(expressionStatements.map(child => `${child.raw}${options.linebreak}`)),
-      ...(await map(expressionStatements, child => interpret(child, options))),
+      ...(await map(expressionStatements, child => interpret(child, options))).map(value => `${value}${options.linebreak}`),
       ...(returnStatements.map(child => child.raw)),
     ].join('')
   }
   if (node instanceof ExpressionStatement) {
-    return 'ExpressionStatement\n'
+    return 'ExpressionStatement'
   }
   if (node instanceof StringLiteral) {
     return node.raw
