@@ -76,9 +76,7 @@ export class ExpressionToken extends Token {
       return null
     }
     const [ raw, label, expression ] = matches
-    // TODO: find a meaningful reason to allow the users to specify their own
-    // label, for now ignore the entire token if different from 'cheer'
-    if (label !== 'cheer') {
+    if (!isValidLabel(label)) {
       return null
     }
     cursor.index += raw.length
@@ -101,9 +99,7 @@ export class ReturnToken extends Token {
       return null
     }
     const [ raw, label ] = matches
-    // TODO: find a meaningful reason to allow the users to specify their own
-    // label, for now ignore the entire token if different from 'cheer'
-    if (label !== 'cheer') {
+    if (!isValidLabel(label)) {
       return null
     }
     cursor.index += raw.length
@@ -126,4 +122,15 @@ export class StringToken extends Token {
   append(input, cursor) {
     this.raw += input[cursor.index++]
   }
+}
+
+/**
+ * Check whether a label is valid
+ * TODO: find a meaningful reason to allow the users to specify their own label,
+ * for now ignore the entire token if different from 'cheer'
+ * @param {String} label - the label to check
+ * @return {Boolean} - true if valid, false otherwise
+ */
+function isValidLabel(label = '') {
+  return label.toLowerCase() === 'cheer'
 }
