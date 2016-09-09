@@ -41,6 +41,11 @@
     "lodash": "^4.15.0",
     "meow": "^3.7.0"
   },
+  "eslintConfig": {
+    "extends": [
+      "opinionated/node"
+    ]
+  },
   "babel": {
     "plugins": [
       [
