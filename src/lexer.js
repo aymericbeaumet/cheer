@@ -1,26 +1,30 @@
 import { last } from 'lodash'
 import { expand } from './expression'
 
-export function tokenize(buffer, options = {}) {
+/**
+ * Create tokens from the input string
+ * @param {String} string - the string to parse
+ */
+export function createTokens(input, options = {}) {
   const cursor = { index: 0 }
   const tokens = []
   let token = null
-  while (cursor.index < buffer.length) {
-    if ((token = ReturnToken.from(buffer, cursor)) ||
-        (token = ExpressionToken.from(buffer, cursor)) ||
-        (token = EOLToken.from(buffer, cursor))) {
+  while (cursor.index < input.length) {
+    if ((token = ReturnToken.from(input, cursor)) ||
+        (token = ExpressionToken.from(input, cursor)) ||
+        (token = EOLToken.from(input, cursor))) {
       tokens.push(token)
     } else {
       const lastToken = last(tokens)
       if (lastToken instanceof StringToken) {
-        lastToken.append(buffer, cursor)
+        lastToken.append(input, cursor)
       } else {
-        tokens.push(StringToken.from(buffer, cursor))
+        tokens.push(StringToken.from(input, cursor))
       }
     }
   }
-  if (cursor.index !== buffer.length) {
-    throw new Error(`[Lexer] Cursor index (${cursor.index}) is not equal to the buffer length (${buffer.length})`)
+  if (cursor.index !== input.length) {
+    throw new Error(`[Lexer] Cursor index (${cursor.index}) is not equal to the input length (${input.length})`)
   }
   tokens.push(new EOFToken())
   return tokens
@@ -41,12 +45,14 @@ export class Token {
 /**
  */
 export class EOLToken extends Token {
-  static from(buffer, cursor = { index: 0 }) {
-    const match = buffer.substring(cursor.index).match(/^(?:\r\n|\r|\n)/)
-    if (!(match && match.length === 1)) {
+  static from(input, cursor = { index: 0 }) {
+    const regexp = /^(?:\r\n|\r|\n)/
+    const matches = input.substring(cursor.index).match(regexp)
+    const expectedMatches = 1
+    if (!(matches && matches.length === expectedMatches)) {
       return null
     }
-    const [ raw ] = match
+    const [ raw ] = matches
     cursor.index += raw.length
     return new EOLToken({
       raw,
@@ -62,12 +68,14 @@ export class EOFToken extends Token {
 /**
  */
 export class ExpressionToken extends Token {
-  static from(buffer, cursor = { index: 0 }) {
-    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*[\s\S]+?)[\s]*-{2,}>/)
-    if (!(match && match.length === 3)) {
+  static from(input, cursor = { index: 0 }) {
+    const regexp = /^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*[\s\S]+?)[\s]*-{2,}>/
+    const matches = input.substring(cursor.index).match(regexp)
+    const expectedMatches = 3
+    if (!(matches && matches.length === expectedMatches)) {
       return null
     }
-    const [ raw, label, expression ] = match
+    const [ raw, label, expression ] = matches
     // TODO: find a meaningful reason to allow the users to specify their own
     // label, for now ignore the entire token if different from 'cheer'
     if (label !== 'cheer') {
@@ -85,12 +93,14 @@ export class ExpressionToken extends Token {
 /**
  */
 export class ReturnToken extends Token {
-  static from(buffer, cursor = { index: 0 }) {
-    const match = buffer.substring(cursor.index).match(/^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*return[\s]*-{2,}>/)
-    if (!(match && match.length === 2)) {
+  static from(input, cursor = { index: 0 }) {
+    const regexp = /^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*return[\s]*-{2,}>/
+    const matches = input.substring(cursor.index).match(regexp)
+    const expectedMatches = 2
+    if (!(matches && matches.length === expectedMatches)) {
       return null
     }
-    const [ raw, label ] = match
+    const [ raw, label ] = matches
     // TODO: find a meaningful reason to allow the users to specify their own
     // label, for now ignore the entire token if different from 'cheer'
     if (label !== 'cheer') {
@@ -107,13 +117,13 @@ export class ReturnToken extends Token {
 /**
  */
 export class StringToken extends Token {
-  static from(buffer, cursor = { index: 0 }) {
+  static from(input, cursor = { index: 0 }) {
     return new StringToken({
-      raw: buffer[cursor.index++],
+      raw: input[cursor.index++],
     })
   }
 
-  append(buffer, cursor) {
-    this.raw += buffer[cursor.index++]
+  append(input, cursor) {
+    this.raw += input[cursor.index++]
   }
 }

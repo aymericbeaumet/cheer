@@ -2,7 +2,8 @@ import fs from 'fs'
 import { dirname, resolve } from 'path'
 import { inspect } from 'util'
 import { map, promisify } from 'bluebird'
-import { tokenize } from './lexer'
+import { interpretAst } from './interpreter'
+import { createTokens } from './lexer'
 import { createAst } from './parser'
 
 const readFile = promisify(fs.readFile)
@@ -35,23 +36,45 @@ export async function fromFile(file, {
 }
 
 /**
- * Galvanize a buffer.
- * @param {String|Buffer} buffer - the buffer to galvanize
+ * Galvanize an input.
+ * @param {String|Buffer} input - the input to galvanize
  */
-export async function fromBuffer(buffer, {
+export async function fromBuffer(input, {
   cwd = process.cwd(),
-  linebreak = '\n',
+  dryRun = false,
+  filepath = null,
+  linebreak = input.toString().includes('\r\n') ? '\r\n' : '\n',
+  lint = false,
   printAst = false,
   printTokens = false,
 } = {}) {
-  const tokens = tokenize(buffer.toString())
+  const bufferAsString = input.toString()
+  const tokens = createTokens(bufferAsString)
   if (printTokens) {
-    console.log(inspect(tokens, { colors: true, depth: Infinity }))
-    process.exit(0)
+    console.log(inspect(tokens, {
+      colors: true,
+      depth: Infinity,
+    }))
+    process.exit() // eslint-disable-line xo/no-process-exit
   }
   const ast = createAst(tokens)
   if (printAst) {
-    console.log(inspect(ast, { colors: true, depth: Infinity }))
-    process.exit(0)
+    console.log(inspect(ast, {
+      colors: true,
+      depth: Infinity,
+    }))
+    process.exit() // eslint-disable-line xo/no-process-exit
   }
+  const newBuffer = await interpretAst(ast, {
+    cwd,
+    linebreak,
+  })
+  if (lint && bufferAsString !== newBuffer) {
+    throw new Error(`[Linter] ${filepath || 'Input'} is outdated`)
+  }
+  if (dryRun) {
+    process.stdout.write(newBuffer)
+    process.exit() // eslint-disable-line xo/no-process-exit
+  }
+  return newBuffer
 }

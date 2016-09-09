@@ -120,13 +120,13 @@ export class StringLiteral extends Node {
     if (tokens[cursor.index] instanceof StringToken ||
         tokens[cursor.index] instanceof EOLToken) {
       return new StringLiteral({
-        value: tokens[cursor.index++].toString(),
+        raw: tokens[cursor.index++].toString(),
       })
     }
     return null
   }
 
   append(node) {
-    this.value += node.value
+    this.raw += node.raw
   }
 }
