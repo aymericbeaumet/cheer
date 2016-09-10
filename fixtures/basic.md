@@ -1,0 +1,4 @@
+<!-->
+  open('./package.json') | `> ${description}`
+<!-->
+<!---->

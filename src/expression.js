@@ -1,30 +1,38 @@
-import { transform } from 'babel-core'
+import { transform, transformFromAst } from 'babel-core'
+import * as t from 'babel-types'
 
 /**
  * Leverage the Babel toolchain to apply several transformations. See the
  * plugins documentation below.
- * @param {String} expression - the expression to expand
- * @return {String} - the expanded expression
+ * @param {String} code - the code to expand
+ * @return {String} - the expanded code
  */
-export function expand(expression) {
-  return transform(expression, {
+export function expand(code) {
+  const { ast } = transform(code, {
     babelrc: false,
     comments: false,
     compact: true,
-    sourceMaps: 'inline',
+    sourceMaps: false,
     plugins: [
       identifierToCallExpression,
       binaryExpressionToCallExpression,
     ],
-  }).code
+  })
+  return ast.program.body.map(expression => transformFromAst(
+    t.file(
+      t.program([ expression ]),
+      ast.program.comments,
+      ast.program.tokens,
+    )
+  ).code)
 }
 
 /**
  * Transform the Identifier's which are not callee of a CallExpression into a
  * CallExpression. Syntactic sugar for `a.pipe(b).pipe(c)` instead of `a().pipe(b()).pipe(c())`
  */
-export function identifierToCallExpression({ types }) {
-  const helper = helperIdentifierToCallExpression({ types })
+export function identifierToCallExpression() {
+  const helper = helperIdentifierToCallExpression()
   return {
     visitor: {
       BinaryExpression(path) {
@@ -46,7 +54,7 @@ export function identifierToCallExpression({ types }) {
  * `.pipe()` call. Syntactic sugar for `a() | b() | c()` instead of
  * `a().pipe(b()).pipe(c())`
  */
-export function binaryExpressionToCallExpression({ types: t }) {
+export function binaryExpressionToCallExpression() {
   return {
     visitor: {
       BinaryExpression: {
@@ -73,7 +81,7 @@ export function binaryExpressionToCallExpression({ types: t }) {
 
 /**
  */
-function helperIdentifierToCallExpression({ types: t }) {
+function helperIdentifierToCallExpression() {
   return function helper(identifier) {
     const callee = identifier
     const args = []

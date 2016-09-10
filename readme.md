@@ -1,28 +1,54 @@
-# cheer [![build](https://img.shields.io/travis/aymericbeaumet/cheer/master.svg)](https://travis-ci.org/aymericbeaumet/cheer) [![npm](https://img.shields.io/npm/v/cheer.svg)](https://www.npmjs.com/package/cheer) [![license](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
+<!-->
+  open('./package.json') | `# ${name} `
+  badge([
+    'travis',
+    'npm/v',
+    { subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' },
+  ], { shields: true })
+<!-->
+<!---->
 
-> ...
+<!-->
+  open('./package.json') | `> ${description}`
+<!-->
+<!---->
 
 ...
 
 ## Install
 
-```bash
-$ npm install --global cheer
-```
+<!-->
+  '```bash'
+  open('./package.json') | `npm install --global ${name}`
+  '```'
+<!-->
+<!---->
 
 ## Usage
 
 ### API
 
-<!-- CHEER jsdoc() -->
+<!-->
+  jsdoc()
+<!-->
+<!---->
 
 ### CLI
 
-```bash
-$ npm install --global cheer
-```
+<!-->
+  '```bash'
+  open('./package.json') | `npm install ---global ${name}`
+  '```'
+<!-->
+<!---->
 
-<!-- CHEER shell('cheer --help') -->
+<!-->
+  '```bash'
+  '$ cheer ---help'
+  '```'
+  shell('cheer ---help')
+<!-->
+<!---->
 
 ## Changelog
 
@@ -31,7 +57,7 @@ $ npm install --global cheer
 
 ## License
 
-[Creative Commons — CC0 1.0 Universal](http://creativecommons.org/publicdomain/zero/1.0/)
+[Creative Commons — CC0 1.0 Universal](http://creativecommons.org/publicdomain/zero/1.0)
 
 To the extent possible under law, [Aymeric Beaumet](https://aymericbeaumet.com)
 has waived all copyright and related or neighboring rights to this work.

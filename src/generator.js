@@ -1,25 +1,22 @@
 import { map } from 'bluebird'
 import { File, BlockStatement, ExpressionStatement, ReturnStatement, StringLiteral } from './parser'
 
-export function interpretAst(node, options) {
-  return interpret(node, options)
+export function generate(node, options) {
+  return walk(node, options)
 }
 
 /**
  */
-async function interpret(node, options) {
+async function walk(node, options) {
   if (node instanceof File) {
-    const children = await map(node.body, function mapChild(child) {
-      return interpret(child, options)
-    })
-    return children.join('')
+    return (await map(node.body, child => walk(child, options))).join('')
   }
   if (node instanceof BlockStatement) {
     const expressionStatements = node.body.filter(child => child instanceof ExpressionStatement)
     const returnStatements = node.body.filter(child => child instanceof ReturnStatement)
     return [
       ...(expressionStatements.map(child => `${child.raw}${options.linebreak}`)),
-      ...(await map(expressionStatements, child => interpret(child, options))).map(result => `${result}${options.linebreak}`),
+      ...(await map(expressionStatements, child => walk(child, options))).map(result => `${result}${options.linebreak}`),
       ...(returnStatements.map(child => child.raw)),
     ].join('')
   }
@@ -29,5 +26,5 @@ async function interpret(node, options) {
   if (node instanceof StringLiteral) {
     return node.raw
   }
-  throw new Error(node, `[Interpreter] Unknown node type: ${node}`)
+  throw new Error(node, `[Generator] Unexpected node type: ${node}`)
 }

@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+import { isEmpty } from 'lodash'
 import meow from 'meow'
 import { fromFiles } from './'
 
@@ -15,16 +18,9 @@ const cli = meow(`
     $ cheer readme.md
 `)
 
-if (!(cli.input.length > 0)) {
+if (isEmpty(cli.input)) {
   cli.usage()
-  process.exit(1)
+  process.exit(1) // eslint-disable-line no-magic-numbers
 }
 
 export default fromFiles(cli.input, cli.flags)
-  .then(function onFinished(results) {
-    console.log(results)
-  })
-  .catch(function onError(error) {
-    console.error(error)
-    process.exit(1)
-  })

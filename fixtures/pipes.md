@@ -1,15 +1,15 @@
-<!-- cheer: a | b --><!-- cheer: return -->
+<!---- a | b ----><!---->
 
-<!-- cheer: a() | b --><!-- cheer: return -->
+<!---- a() | b ----><!---->
 
-<!-- cheer: a | b() --><!-- cheer: return -->
+<!---- a | b() ----><!---->
 
-<!-- cheer: a() | b() --><!-- cheer: return -->
+<!---- a() | b() ----><!---->
 
-<!-- cheer: a.pipe(b) --><!-- cheer: return -->
+<!---- a.pipe(b) ----><!---->
 
-<!-- cheer: a().pipe(b) --><!-- cheer: return -->
+<!---- a().pipe(b) ----><!---->
 
-<!-- cheer: a.pipe(b()) --><!-- cheer: return -->
+<!---- a.pipe(b()) ----><!---->
 
-<!-- cheer: a().pipe(b()) --><!-- cheer: return -->
+<!---- a().pipe(b()) ----><!---->

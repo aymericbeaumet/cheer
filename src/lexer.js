@@ -1,32 +1,29 @@
 import { last } from 'lodash'
-import { expand } from './expression'
 
 /**
  * Create tokens from the input string
- * @param {String} string - the string to parse
+ * @param {String} input - the input to parse
+ * @return {Token[]} - a list of tokens
  */
-export function createTokens(input, options = {}) {
+export function tokenize(input) {
   const cursor = { index: 0 }
   const tokens = []
   let token = null
   while (cursor.index < input.length) {
-    if ((token = ReturnToken.from(input, cursor)) ||
-        (token = ExpressionToken.from(input, cursor)) ||
-        (token = EOLToken.from(input, cursor))) {
+    if ((token = EndOfLineToken.from(input, cursor)) ||
+        (token = LongDelimiterToken.from(input, cursor)) ||
+        (token = ShortDelimiterToken.from(input, cursor))) {
       tokens.push(token)
     } else {
       const lastToken = last(tokens)
-      if (lastToken instanceof StringToken) {
+      if (lastToken instanceof TextToken) {
         lastToken.append(input, cursor)
       } else {
-        tokens.push(StringToken.from(input, cursor))
+        tokens.push(TextToken.from(input, cursor))
       }
     }
   }
-  if (cursor.index !== input.length) {
-    throw new Error(`[Lexer] Cursor index (${cursor.index}) is not equal to the input length (${input.length})`)
-  }
-  tokens.push(new EOFToken())
+  tokens.push(EndOfFileToken.from(input, cursor))
   return tokens
 }
 
@@ -34,7 +31,13 @@ export function createTokens(input, options = {}) {
  */
 export class Token {
   constructor(...args) {
-    Object.assign(this, ...args)
+    Object.assign(this, {
+      loc: {
+        line: Infinity,
+        column: Infinity,
+      },
+      raw: null,
+    }, ...args)
   }
 
   toString() {
@@ -42,9 +45,16 @@ export class Token {
   }
 }
 
-/**
- */
-export class EOLToken extends Token {
+export class EndOfFileToken extends Token {
+  static from(input, cursor = { index: 0 }) {
+    if (cursor.index !== input.length) {
+      throw new LexerError(`Cursor index (${cursor.index}) is not equal to the input length (${input.length})`)
+    }
+    return new EndOfFileToken()
+  }
+}
+
+export class EndOfLineToken extends Token {
   static from(input, cursor = { index: 0 }) {
     const regexp = /^(?:\r\n|\r|\n)/
     const matches = input.substring(cursor.index).match(regexp)
@@ -52,85 +62,69 @@ export class EOLToken extends Token {
     if (!(matches && matches.length === expectedMatches)) {
       return null
     }
+    const loc = getLocation(input, cursor.index)
     const [ raw ] = matches
     cursor.index += raw.length
-    return new EOLToken({
-      raw,
-    })
+    return new EndOfLineToken({ loc, raw })
   }
 }
 
-/**
- */
-export class EOFToken extends Token {
-}
-
-/**
- */
-export class ExpressionToken extends Token {
+export class LongDelimiterToken extends Token {
   static from(input, cursor = { index: 0 }) {
-    const regexp = /^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*([a-zA-Z_][\w]*[\s]*[\s\S]+?)[\s]*-{2,}>/
-    const matches = input.substring(cursor.index).match(regexp)
-    const expectedMatches = 3
-    if (!(matches && matches.length === expectedMatches)) {
-      return null
-    }
-    const [ raw, label, expression ] = matches
-    if (!isValidLabel(label)) {
+    const loc = getLocation(input, cursor.index)
+    const raw = '<!---->'
+    if (!input.substring(cursor.index).startsWith(raw)) {
       return null
     }
     cursor.index += raw.length
-    return new ExpressionToken({
-      raw,
-      label,
-      expression: expand(expression),
-    })
+    return new LongDelimiterToken({ loc, raw })
   }
 }
 
-/**
- */
-export class ReturnToken extends Token {
+export class ShortDelimiterToken extends Token {
   static from(input, cursor = { index: 0 }) {
-    const regexp = /^<!-{2,}[\s]*([a-zA-Z_][\w]*)[\s]*:[\s]*return[\s]*-{2,}>/
-    const matches = input.substring(cursor.index).match(regexp)
-    const expectedMatches = 2
-    if (!(matches && matches.length === expectedMatches)) {
-      return null
-    }
-    const [ raw, label ] = matches
-    if (!isValidLabel(label)) {
+    const loc = getLocation(input, cursor.index)
+    const raw = '<!-->'
+    if (!input.substring(cursor.index).startsWith(raw)) {
       return null
     }
     cursor.index += raw.length
-    return new ReturnToken({
-      raw,
-      label,
-    })
+    return new ShortDelimiterToken({ loc, raw })
   }
 }
 
-/**
- */
-export class StringToken extends Token {
+export class TextToken extends Token {
   static from(input, cursor = { index: 0 }) {
-    return new StringToken({
-      raw: input[cursor.index++],
-    })
+    const loc = getLocation(input, cursor.index)
+    const raw = input[cursor.index++]
+    return new TextToken({ loc, raw })
   }
 
   append(input, cursor) {
-    this.raw += input[cursor.index++]
+    const raw = input[cursor.index++]
+    this.raw += raw
   }
 }
 
-/**
- * Check whether a label is valid
- * TODO: find a meaningful reason to allow the users to specify their own label,
- * for now ignore the entire token if different from 'cheer'
- * @param {String} label - the label to check
- * @return {Boolean} - true if valid, false otherwise
- */
-function isValidLabel(label = '') {
-  return label.toLowerCase() === 'cheer'
+function getLocation(input, cursorIndex) {
+  let line = 1
+  let column = 1
+  for (let index = 0; index <= cursorIndex; index++) {
+    const newline = input.substring(index).match(/^(?:\r\n|\r|\n)/)
+    if (newline) {
+      line++
+      column = 1
+      index += newline[0].length
+    } else {
+      column++
+      index++
+    }
+  }
+  return { line, column }
+}
+
+function LexerError(message) {
+  const error = new Error(message)
+  error.name = 'LexerError'
+  return error
 }

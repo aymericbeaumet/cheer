@@ -1,7 +1,7 @@
 {
   "name": "cheer",
   "version": "0.0.1",
-  "description": "Galvanize your markdown files",
+  "description": "Galvanize your files with dynamic content",
   "files": [
     "lib"
   ],
@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "babel-core": "^6.14.0",
+    "babel-types": "^6.15.0",
     "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
     "meow": "^3.7.0"

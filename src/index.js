@@ -2,9 +2,9 @@ import fs from 'fs'
 import { dirname, resolve } from 'path'
 import { inspect } from 'util'
 import { map, promisify } from 'bluebird'
-import { interpretAst } from './interpreter'
-import { createTokens } from './lexer'
-import { createAst } from './parser'
+import { generate } from './generator'
+import { tokenize } from './lexer'
+import { parse } from './parser'
 
 const readFile = promisify(fs.readFile)
 
@@ -37,44 +37,47 @@ export async function fromFile(file, {
 
 /**
  * Galvanize an input.
- * @param {String|Buffer} input - the input to galvanize
+ * @param {String|Buffer} buffer - the input to galvanize
+ * @return {String} - the galvanized input
  */
-export async function fromBuffer(input, {
+export async function fromBuffer(buffer, {
   cwd = process.cwd(),
   dryRun = false,
   filepath = null,
-  linebreak = input.toString().includes('\r\n') ? '\r\n' : '\n',
+  linebreak = buffer.toString().includes('\r\n') ? '\r\n' : '\n',
   lint = false,
   printAst = false,
   printTokens = false,
 } = {}) {
-  const bufferAsString = input.toString()
-  const tokens = createTokens(bufferAsString)
+  const input = buffer.toString()
+  const tokens = tokenize(input)
   if (printTokens) {
-    console.log(inspect(tokens, {
+    console.log(inspect(tokens, { // eslint-disable-line no-console
       colors: true,
       depth: Infinity,
+      maxArrayLength: Infinity,
     }))
     process.exit() // eslint-disable-line xo/no-process-exit
   }
-  const ast = createAst(tokens)
+  const ast = parse(tokens)
   if (printAst) {
-    console.log(inspect(ast, {
+    console.log(inspect(ast, { // eslint-disable-line no-console
       colors: true,
       depth: Infinity,
+      maxArrayLength: Infinity,
     }))
     process.exit() // eslint-disable-line xo/no-process-exit
   }
-  const newBuffer = await interpretAst(ast, {
+  const output = await generate(ast, {
     cwd,
     linebreak,
   })
-  if (lint && bufferAsString !== newBuffer) {
+  if (lint && input !== output) {
     throw new Error(`[Linter] ${filepath || 'Input'} is outdated`)
   }
   if (dryRun) {
-    process.stdout.write(newBuffer)
+    process.stdout.write(output)
     process.exit() // eslint-disable-line xo/no-process-exit
   }
-  return newBuffer
+  return output
 }

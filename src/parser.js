@@ -1,132 +1,156 @@
-import { last } from 'lodash'
-import { ExpressionToken, ReturnToken, StringToken, EOLToken, EOFToken } from './lexer'
+import { isEmpty } from 'lodash'
+import { expand } from './expression'
+import {
+  EndOfFileToken,
+  EndOfLineToken,
+  LongDelimiterToken,
+  ShortDelimiterToken,
+  TextToken,
+} from './lexer'
 
 /**
- * Create an AST following this EBNF, all the tokens are emitted by the lexer
- * and are terminal in this grammar:
+ * Create an AST following this EBNF:
  *
- *   File = { BlockStatement | StringLiteral }, EOFToken ;
- *   BlockStatement = ExpressionStatement, { ExpressionStatement | EOLToken }, { StringLiteral }, ReturnStatement ;
- *   ExpressionStatement = ExpressionToken ;
- *   ReturnStatement = ReturnToken ;
- *   StringLiteral = StringToken | EOLToken ;
+ *   File =
+ *     { Block | Text },
+ *     EndOfFileToken;
+ *
+ *   Block =
+ *     BlockHeader,
+ *     [ Text ],
+ *     BlockFooter,
+ *
+ *   BlockHeader =
+ *     ShortDelimiterToken,
+ *     ExpressionsStatements,
+ *     ShortDelimiterToken;
+ *
+ *   BlockFooter =
+ *     LongDelimiterToken;
+ *
+ *   ExpressionsStatements =
+ *     Text;
+ *
+ *   Text =
+ *     { TextToken | EndOfLineToken };
+ *
+ * @param {Token[]} tokens - the tokens to use to create the AST
+ * @return {File} - the AST
  */
-export function createAst(tokens, options) {
+export function parse(tokens) {
   const cursor = { index: 0 }
   return File.from(tokens, cursor)
 }
 
-/**
- */
 export class Node {
   constructor(...args) {
     Object.assign(this, ...args)
   }
 }
 
-/**
- */
 export class File extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    const body = []
-    let node
-    while (tokens[cursor.index]) {
-      if (node = BlockStatement.from(tokens, cursor)) {
-        body.push(node)
-      } else if (node = StringLiteral.from(tokens, cursor)) {
-        const lastNode = last(body)
-        if (lastNode instanceof StringLiteral) {
-          lastNode.append(node)
-        } else {
-          body.push(node)
-        }
-      } else {
-        break
-      }
-    }
-    if (!(tokens[cursor.index] instanceof EOFToken)) {
-      throw new Error(`[Parser] Expected EOF, but token:${cursor.index} is ${tokens[cursor.index]}`)
-    }
-    return new File({
-      body,
-    })
-  }
-}
-
-/**
- */
-export class BlockStatement extends Node {
-  static from(tokens, cursor = { index: 0 }) {
+    let raw = ''
     const body = []
     let node = null
-    if (!(node = ExpressionStatement.from(tokens, cursor))) {
-      return null
+    while ((node = Block.from(tokens, cursor)) || (node = Text.from(tokens, cursor))) {
+      body.push(node)
+      raw += node.raw
     }
-    body.push(node)
-    while ((node = ExpressionStatement.from(tokens, cursor) ||
-           (node = tokens[cursor.index] instanceof EOLToken))) {
-      if (node instanceof ExpressionStatement) {
-        body.push(node)
-      } else {
-        cursor.index++
-      }
+    if (!((node = tokens[cursor.index]) instanceof EndOfFileToken)) {
+      throw new UnexpectedTokenError('EndOfFileToken', node)
     }
-    while (StringLiteral.from(tokens, cursor)) {}
-    if (!(node = ReturnStatement.from(tokens, cursor))) {
-      throw new Error(`[Parser] Expected ReturnToken, but token:${cursor.index} is ${tokens[cursor.index]}`)
-    }
-    body.push(node)
-    return new BlockStatement({
-      body,
-    })
+    return new File({ raw, body })
   }
 }
 
-/**
- */
-export class ExpressionStatement extends Node {
+export class Block extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    if (!(tokens[cursor.index] instanceof ExpressionToken)) {
+    let raw = ''
+    let header = null
+    let content = null
+    let footer = null
+    if (!(header = BlockHeader.from(tokens, cursor))) {
       return null
     }
-    const { raw, label, expression } = tokens[cursor.index++]
-    return new ExpressionStatement({
-      raw,
-      label,
-      expression,
-    })
+    raw += header.raw
+    content = Text.from(tokens, cursor) || { raw: '' }
+    raw += content.raw
+    if (!(footer = BlockFooter.from(tokens, cursor))) {
+      throw new UnexpectedTokenError('BlockFooter', tokens[cursor.index])
+    }
+    raw += footer.raw
+    return new Block({ raw, header, content, footer })
   }
 }
 
-/**
- */
-export class ReturnStatement extends Node {
+export class BlockHeader extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    if (!(tokens[cursor.index] instanceof ReturnToken)) {
+    let raw = ''
+    let expressions = null
+    if (!(tokens[cursor.index] instanceof ShortDelimiterToken)) {
       return null
     }
-    const { raw, label } = tokens[cursor.index++]
-    return new ReturnStatement({
-      raw,
-      label,
-    })
+    raw += tokens[cursor.index++].raw
+    if (!(expressions = ExpressionsStatements.from(tokens, cursor))) {
+      throw new UnexpectedTokenError('ExpressionsStatements', expressions)
+    }
+    raw += expressions.raw
+    if (!(tokens[cursor.index] instanceof ShortDelimiterToken)) {
+      throw new UnexpectedTokenError('ShortDelimiterToken', tokens[cursor.index])
+    }
+    raw += tokens[cursor.index++].raw
+    return new BlockHeader({ raw, expressions })
   }
 }
 
-/**
- */
-export class StringLiteral extends Node {
+export class BlockFooter extends Node {
   static from(tokens, cursor = { index: 0 }) {
-    if (tokens[cursor.index] instanceof StringToken ||
-        tokens[cursor.index] instanceof EOLToken) {
-      return new StringLiteral({
-        raw: tokens[cursor.index++].toString(),
-      })
+    let raw = ''
+    if (!(tokens[cursor.index] instanceof LongDelimiterToken)) {
+      return null
     }
-    return null
+    raw += tokens[cursor.index++].raw
+    return new BlockFooter({ raw })
   }
+}
 
-  append(node) {
-    this.raw += node.raw
+export class ExpressionsStatements extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    let node = null
+    if (!(node = Text.from(tokens, cursor))) {
+      return null
+    }
+    const raw = node.raw
+    const expressions = expand(raw)
+    return new ExpressionsStatements({ raw, expressions })
   }
+}
+
+export class Text extends Node {
+  static from(tokens, cursor = { index: 0 }) {
+    let raw = ''
+    while ((tokens[cursor.index] instanceof TextToken) ||
+           (tokens[cursor.index] instanceof EndOfLineToken)) {
+      raw += tokens[cursor.index++]
+    }
+    if (isEmpty(raw)) {
+      return null
+    }
+    return new Text({ raw })
+  }
+}
+
+function ParserError(message) {
+  const error = new Error(message)
+  error.name = 'ParserError'
+  return error
+}
+
+function UnexpectedTokenError(expectedName, foundToken) {
+  const { name } = foundToken.constructor
+  const { raw, loc: { line, column } } = foundToken
+  return new ParserError(`Unexpected token at position ${line}:${column}, should be a ${expectedName}, but found a ${name}:
+
+> ${line} | ${raw}`)
 }
