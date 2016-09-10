@@ -1,12 +1,6 @@
 import { isEmpty } from 'lodash'
 import { expand } from './expression'
-import {
-  EndOfFileToken,
-  EndOfLineToken,
-  LongDelimiterToken,
-  ShortDelimiterToken,
-  TextToken,
-} from './lexer'
+import * as t from './lexer'
 
 /**
  * Create an AST following this EBNF:
@@ -21,12 +15,12 @@ import {
  *     BlockFooter,
  *
  *   BlockHeader =
- *     ShortDelimiterToken,
+ *     OpeningToken,
  *     ExpressionsStatements,
- *     ShortDelimiterToken;
+ *     SeparatorToken;
  *
  *   BlockFooter =
- *     LongDelimiterToken;
+ *     ClosingToken;
  *
  *   ExpressionsStatements =
  *     Text;
@@ -37,7 +31,7 @@ import {
  * @param {Token[]} tokens - the tokens to use to create the AST
  * @return {File} - the AST
  */
-export function parse(tokens) {
+export default function parse(tokens) {
   const cursor = { index: 0 }
   return File.from(tokens, cursor)
 }
@@ -45,6 +39,7 @@ export function parse(tokens) {
 export class Node {
   constructor({ raw, ...props }) {
     Object.defineProperty(this, 'raw', {
+      configurable: true,
       enumerable: false,
       writable: true,
       value: raw,
@@ -62,7 +57,7 @@ export class File extends Node {
       body.push(node)
       raw += node.raw
     }
-    if (!((node = tokens[cursor.index]) instanceof EndOfFileToken)) {
+    if (!((node = tokens[cursor.index]) instanceof t.EndOfFileToken)) {
       throw new UnexpectedTokenError('EndOfFileToken', node)
     }
     return new File({ raw, body })
@@ -93,7 +88,7 @@ export class BlockHeader extends Node {
   static from(tokens, cursor = { index: 0 }) {
     let raw = ''
     let expressions = null
-    if (!(tokens[cursor.index] instanceof ShortDelimiterToken)) {
+    if (!(tokens[cursor.index] instanceof t.OpeningToken)) {
       return null
     }
     raw += tokens[cursor.index++].raw
@@ -101,7 +96,7 @@ export class BlockHeader extends Node {
       throw new UnexpectedTokenError('ExpressionsStatements', expressions)
     }
     raw += expressions.raw
-    if (!(tokens[cursor.index] instanceof ShortDelimiterToken)) {
+    if (!(tokens[cursor.index] instanceof t.SeparatorToken)) {
       throw new UnexpectedTokenError('ShortDelimiterToken', tokens[cursor.index])
     }
     raw += tokens[cursor.index++].raw
@@ -112,7 +107,7 @@ export class BlockHeader extends Node {
 export class BlockFooter extends Node {
   static from(tokens, cursor = { index: 0 }) {
     let raw = ''
-    if (!(tokens[cursor.index] instanceof LongDelimiterToken)) {
+    if (!(tokens[cursor.index] instanceof t.ClosingToken)) {
       return null
     }
     raw += tokens[cursor.index++].raw
@@ -135,14 +130,16 @@ export class ExpressionsStatements extends Node {
 export class Text extends Node {
   static from(tokens, cursor = { index: 0 }) {
     let raw = ''
-    while ((tokens[cursor.index] instanceof TextToken) ||
-           (tokens[cursor.index] instanceof EndOfLineToken)) {
+    while ((tokens[cursor.index] instanceof t.TextToken) ||
+           (tokens[cursor.index] instanceof t.EndOfLineToken)) {
       raw += tokens[cursor.index++]
     }
     if (isEmpty(raw)) {
       return null
     }
-    return new Text({ raw })
+    const node = new Text({ raw })
+    Object.defineProperty(node, 'raw', { enumerable: true })
+    return node
   }
 }
 

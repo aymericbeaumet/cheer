@@ -5,14 +5,15 @@ import { last } from 'lodash'
  * @param {String} input - the input to parse
  * @return {Token[]} - a list of tokens
  */
-export function tokenize(input) {
+export default function tokenize(input) {
   const cursor = { index: 0 }
   const tokens = []
   let token = null
   while (cursor.index < input.length) {
-    if ((token = EndOfLineToken.from(input, cursor)) ||
-        (token = LongDelimiterToken.from(input, cursor)) ||
-        (token = ShortDelimiterToken.from(input, cursor))) {
+    if ((token = ClosingToken.from(input, cursor)) ||
+        (token = OpeningToken.from(input, cursor)) ||
+        (token = SeparatorToken.from(input, cursor)) ||
+        (token = EndOfLineToken.from(input, cursor))) {
       tokens.push(token)
     } else {
       const lastToken = last(tokens)
@@ -39,12 +40,52 @@ export class Token {
   }
 }
 
-export class EndOfFileToken extends Token {
+export class OpeningToken extends Token {
   static from(input, cursor = { index: 0 }) {
-    if (cursor.index !== input.length) {
-      throw new LexerError(`Cursor index (${cursor.index}) is not equal to the input length (${input.length})`)
+    const loc = getLocation(input, cursor.index)
+    const raw = '<!---'
+    if (!input.substring(cursor.index).startsWith(raw)) {
+      return null
     }
-    return new EndOfFileToken()
+    cursor.index += raw.length
+    return new OpeningToken({ loc, raw })
+  }
+}
+
+export class SeparatorToken extends Token {
+  static from(input, cursor = { index: 0 }) {
+    const loc = getLocation(input, cursor.index)
+    const raw = '--->'
+    if (!input.substring(cursor.index).startsWith(raw)) {
+      return null
+    }
+    cursor.index += raw.length
+    return new SeparatorToken({ loc, raw })
+  }
+}
+
+export class ClosingToken extends Token {
+  static from(input, cursor = { index: 0 }) {
+    const loc = getLocation(input, cursor.index)
+    const raw = '<!--->'
+    if (!input.substring(cursor.index).startsWith(raw)) {
+      return null
+    }
+    cursor.index += raw.length
+    return new ClosingToken({ loc, raw })
+  }
+}
+
+export class TextToken extends Token {
+  static from(input, cursor = { index: 0 }) {
+    const loc = getLocation(input, cursor.index)
+    const raw = input[cursor.index++]
+    return new TextToken({ loc, raw })
+  }
+
+  append(input, cursor) {
+    const raw = input[cursor.index++]
+    this.raw += raw
   }
 }
 
@@ -63,47 +104,19 @@ export class EndOfLineToken extends Token {
   }
 }
 
-export class LongDelimiterToken extends Token {
+export class EndOfFileToken extends Token {
   static from(input, cursor = { index: 0 }) {
-    const loc = getLocation(input, cursor.index)
-    const raw = '<!---->'
-    if (!input.substring(cursor.index).startsWith(raw)) {
-      return null
+    if (cursor.index !== input.length) {
+      throw new LexerError(`Cursor index (${cursor.index}) is not equal to the input length (${input.length})`)
     }
-    cursor.index += raw.length
-    return new LongDelimiterToken({ loc, raw })
-  }
-}
-
-export class ShortDelimiterToken extends Token {
-  static from(input, cursor = { index: 0 }) {
-    const loc = getLocation(input, cursor.index)
-    const raw = '<!-->'
-    if (!input.substring(cursor.index).startsWith(raw)) {
-      return null
-    }
-    cursor.index += raw.length
-    return new ShortDelimiterToken({ loc, raw })
-  }
-}
-
-export class TextToken extends Token {
-  static from(input, cursor = { index: 0 }) {
-    const loc = getLocation(input, cursor.index)
-    const raw = input[cursor.index++]
-    return new TextToken({ loc, raw })
-  }
-
-  append(input, cursor) {
-    const raw = input[cursor.index++]
-    this.raw += raw
+    return new EndOfFileToken()
   }
 }
 
 function getLocation(input, cursorIndex) {
   let line = 1
   let column = 1
-  for (let index = 0; index <= cursorIndex; index++) {
+  for (let index = 0; index < cursorIndex;) {
     const newline = input.substring(index).match(/^(?:\r\n|\r|\n)/)
     if (newline) {
       line++

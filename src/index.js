@@ -2,9 +2,9 @@ import fs from 'fs'
 import { dirname, resolve } from 'path'
 import { inspect } from 'util'
 import { map, promisify } from 'bluebird'
-import { generate } from './generator'
-import { tokenize } from './lexer'
-import { parse } from './parser'
+import generate from './generator'
+import tokenize from './lexer'
+import parse from './parser'
 
 const readFile = promisify(fs.readFile)
 

@@ -1,54 +1,54 @@
-<!-->
+<!---
   open('./package.json') | `# ${name} `
   badge([
     'travis',
     'npm/v',
     { subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' },
   ], { shields: true })
-<!-->
-<!---->
+--->
+<!--->
 
-<!-->
+<!---
   open('./package.json') | `> ${description}`
-<!-->
-<!---->
+--->
+<!--->
 
 ...
 
 ## Install
 
-<!-->
+<!---
   '```bash'
   open('./package.json') | `npm install --global ${name}`
   '```'
-<!-->
-<!---->
+--->
+<!--->
 
 ## Usage
 
 ### API
 
-<!-->
+<!---
   jsdoc()
-<!-->
-<!---->
+--->
+<!--->
 
 ### CLI
 
-<!-->
+<!---
   '```bash'
   open('./package.json') | `npm install ---global ${name}`
   '```'
-<!-->
-<!---->
+--->
+<!--->
 
-<!-->
+<!---
   '```bash'
   '$ cheer ---help'
   '```'
   shell('cheer ---help')
-<!-->
-<!---->
+--->
+<!--->
 
 ## Changelog
 

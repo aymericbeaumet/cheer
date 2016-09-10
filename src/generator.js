@@ -1,7 +1,7 @@
 import { map } from 'bluebird'
 import { File, BlockStatement, ExpressionStatement, ReturnStatement, StringLiteral } from './parser'
 
-export function generate(node, options) {
+export default function generate(node, options) {
   return walk(node, options)
 }
 
