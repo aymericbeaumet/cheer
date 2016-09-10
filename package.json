@@ -29,6 +29,7 @@
     "babel-cli": "^6.14.0",
     "babel-jest": "^15.0.0",
     "babel-plugin-transform-async-to-module-method": "^6.8.0",
+    "babel-polyfill": "^6.13.0",
     "babel-preset-es2015-node4": "^2.1.0",
     "babel-preset-stage-2": "6.13.0",
     "eslint": "^3.4.0",
@@ -47,7 +48,15 @@
       "opinionated/node"
     ]
   },
+  "jest": {
+    "testPathDirs": [
+      "src"
+    ]
+  },
   "babel": {
+    "ignore": [
+      "src/{,**/}*.test.js"
+    ],
     "plugins": [
       [
         "transform-async-to-module-method",

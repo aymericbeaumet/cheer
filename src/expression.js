@@ -9,21 +9,29 @@ import { isEmpty, sortBy } from 'lodash'
  * @return {String} - the expanded code
  */
 export function expand(code) {
-  const { ast } = transform(code, {
+  const options = {
     babelrc: false,
+    comments: false,
+    compact: true,
+    minified: true,
+  }
+  const { ast } = transform(code, {
+    ...options,
+    code: false,
     plugins: [
       fromDirectiveToExpressionStatements,
       fromIdentifierToCallExpression,
       fromBinaryExpressionToCallExpression,
     ],
   })
-  return ast.program.body.map(expression => transformFromAst(
-    t.file(
+  return ast.program.body.map(expression => {
+    const root = t.file(
       t.program([ expression ]),
       ast.program.comments,
       ast.program.tokens,
     )
-  ).code)
+    return transformFromAst(root, null, options).code
+  })
 }
 
 /**
@@ -70,6 +78,9 @@ export function fromIdentifierToCallExpression() {
       },
       MemberExpression(path) {
         path.node.object = helper(path.node.object)
+      },
+      ExpressionStatement(path) {
+        path.node.expression = helper(path.node.expression)
       },
     },
   }
