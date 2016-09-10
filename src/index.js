@@ -52,34 +52,39 @@ export async function fromBuffer(buffer, {
   const input = buffer.toString()
   const tokens = tokenize(input)
   if (printTokens) {
-    console.log(inspect(tokens, { // eslint-disable-line no-console
-      breakLength: 0,
-      colors: true,
-      depth: Infinity,
-      maxArrayLength: Infinity,
-    }))
-    process.exit() // eslint-disable-line xo/no-process-exit
+    printObjectToStdoutAndExit(tokens)
   }
   const ast = parse(tokens)
   if (printAst) {
-    console.log(inspect(ast, { // eslint-disable-line no-console
-      breakLength: 0,
-      colors: true,
-      depth: Infinity,
-      maxArrayLength: Infinity,
-    }))
-    process.exit() // eslint-disable-line xo/no-process-exit
+    printObjectToStdoutAndExit(ast)
   }
-  const output = await generate(ast, {
-    cwd,
-    linebreak,
-  })
+  const output = await generate(ast, { cwd, linebreak })
   if (lint && input !== output) {
-    throw new Error(`[Linter] ${filepath || 'Input'} is outdated`)
+    throw new LinterError(`${filepath || 'Input'} is outdated`)
   }
   if (dryRun) {
-    process.stdout.write(output)
-    process.exit() // eslint-disable-line xo/no-process-exit
+    printStringToStdoutAndExit(output)
   }
   return output
+}
+
+function printObjectToStdoutAndExit(object) {
+  console.log(inspect(object, { // eslint-disable-line no-console
+    breakLength: 0,
+    colors: true,
+    depth: Infinity,
+    maxArrayLength: Infinity,
+  }))
+  process.exit() // eslint-disable-line xo/no-process-exit
+}
+
+function printStringToStdoutAndExit(string) {
+  process.stdout.write(string)
+  process.exit() // eslint-disable-line xo/no-process-exit
+}
+
+function LinterError(message) {
+  const error = new Error(message)
+  error.name = 'LinterError'
+  return error
 }
