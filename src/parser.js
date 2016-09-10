@@ -43,8 +43,13 @@ export function parse(tokens) {
 }
 
 export class Node {
-  constructor(...args) {
-    Object.assign(this, ...args)
+  constructor({ raw, ...props }) {
+    Object.defineProperty(this, 'raw', {
+      enumerable: false,
+      writable: true,
+      value: raw,
+    })
+    Object.assign(this, { ...props })
   }
 }
 

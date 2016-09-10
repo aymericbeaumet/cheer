@@ -53,6 +53,7 @@ export async function fromBuffer(buffer, {
   const tokens = tokenize(input)
   if (printTokens) {
     console.log(inspect(tokens, { // eslint-disable-line no-console
+      breakLength: 0,
       colors: true,
       depth: Infinity,
       maxArrayLength: Infinity,
@@ -62,6 +63,7 @@ export async function fromBuffer(buffer, {
   const ast = parse(tokens)
   if (printAst) {
     console.log(inspect(ast, { // eslint-disable-line no-console
+      breakLength: 0,
       colors: true,
       depth: Infinity,
       maxArrayLength: Infinity,

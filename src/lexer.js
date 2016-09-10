@@ -30,14 +30,8 @@ export function tokenize(input) {
 /**
  */
 export class Token {
-  constructor(...args) {
-    Object.assign(this, {
-      loc: {
-        line: Infinity,
-        column: Infinity,
-      },
-      raw: null,
-    }, ...args)
+  constructor(props) {
+    Object.assign(this, props)
   }
 
   toString() {
