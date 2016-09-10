@@ -1,5 +1,6 @@
 import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
+import { isEmpty, sortBy } from 'lodash'
 
 /**
  * Leverage the Babel toolchain to apply several transformations. See the
@@ -10,12 +11,10 @@ import * as t from 'babel-types'
 export function expand(code) {
   const { ast } = transform(code, {
     babelrc: false,
-    comments: false,
-    compact: true,
-    sourceMaps: false,
     plugins: [
-      identifierToCallExpression,
-      binaryExpressionToCallExpression,
+      fromDirectiveToExpressionStatements,
+      fromIdentifierToCallExpression,
+      fromBinaryExpressionToCallExpression,
     ],
   })
   return ast.program.body.map(expression => transformFromAst(
@@ -28,10 +27,37 @@ export function expand(code) {
 }
 
 /**
+ * Reinject the Directive's as StringLiteral's.
+ */
+export function fromDirectiveToExpressionStatements() {
+  return {
+    visitor: {
+      Program(path) {
+        if (isEmpty(path.node.directives)) {
+          return
+        }
+        const directives = path.node.directives.map(directive => {
+          const directiveLiteral = directive.value
+          const stringLiteral = t.stringLiteral(directiveLiteral.value)
+          const expression = t.expressionStatement(stringLiteral)
+          expression.start = stringLiteral.start = directiveLiteral.start
+          return expression
+        })
+        path.node.directives.length = 0
+        path.node.body = sortBy([
+          ...path.node.body,
+          ...directives,
+        ], 'start')
+      },
+    },
+  }
+}
+
+/**
  * Transform the Identifier's which are not callee of a CallExpression into a
  * CallExpression. Syntactic sugar for `a.pipe(b).pipe(c)` instead of `a().pipe(b()).pipe(c())`
  */
-export function identifierToCallExpression() {
+export function fromIdentifierToCallExpression() {
   const helper = helperIdentifierToCallExpression()
   return {
     visitor: {
@@ -54,7 +80,7 @@ export function identifierToCallExpression() {
  * `.pipe()` call. Syntactic sugar for `a() | b() | c()` instead of
  * `a().pipe(b()).pipe(c())`
  */
-export function binaryExpressionToCallExpression() {
+export function fromBinaryExpressionToCallExpression() {
   return {
     visitor: {
       BinaryExpression: {
