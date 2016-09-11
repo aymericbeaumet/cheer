@@ -1,15 +1,17 @@
 import { expand } from '../src/expression'
 
-describe('expression#expand', () => {
+describe('expand()', () => {
 
-  it('should throw if a different type than ExpressionStatement is find in the Program body', () => {
+  it('should throw if a different type than ExpressionStatement is found in the Program body', () => {
     expect(expand.bind(null, `
       const foo = 'bar'
     `)).toThrowError('Only ExpressionStatement are allowed as the root nodes')
   })
 
   it('should split in several ExpressionStatement', () => {
-    expect(expand('a;b').length).toBe(2)
+    expect(expand(`
+      a;b
+    `).length).toBe(2)
   })
 
   it('should remove comments', () => {
@@ -90,17 +92,23 @@ describe('expression#expand', () => {
     ])
   })
 
-  it('should expand TemplateLiteral to the template plugin', () => {
+  it('should expand TemplateLiteral to the template plugin if at least one expression', () => {
     expect(expand(`
 \`
-multi
-line
-\${1+1}
-\${'foo'}
-\${"bar"}
+one expression: \${1}
 \`
     `)).toEqual([
-      'template("\\nmulti\\nline\\n${1+1}\\n${\\"foo\\"}\\n${\\"bar\\"}\\n\");',
+      'template("\\none expression: ${1}\\n");',
+    ])
+  })
+
+  it('should expand TemplateLiteral to the wrap plugin if no expressions', () => {
+    expect(expand(`
+\`
+no expressions
+\`
+    `)).toEqual([
+      'wrap("\\nno expressions\\n");',
     ])
   })
 

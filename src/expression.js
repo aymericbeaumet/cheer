@@ -23,7 +23,7 @@ export function expand(code) {
       fromBinaryExpressionToCallExpression,
       fromDirectiveToExpressionStatements,
       fromIdentifierToCallExpression,
-      fromLiteralToWrapPlugin,
+      fromLiteralToWrapperPlugins,
     ],
   })
   return ast.program.body.map(expressionStatement => {
@@ -123,7 +123,7 @@ export function fromIdentifierToCallExpression() {
 
 /**
  */
-export function fromLiteralToWrapPlugin() {
+export function fromLiteralToWrapperPlugins() {
   const wrap = path => {
     let currentPath = path
     while (t.isUnaryExpression(currentPath.parentPath.node)) {
@@ -135,7 +135,8 @@ export function fromLiteralToWrapPlugin() {
     currentPath.stop()
   }
   const template = path => {
-    const callee = t.identifier('template')
+    const identifier = isEmpty(path.node.expressions) ? 'wrap' : 'template'
+    const callee = t.identifier(identifier)
     const args = [
       t.stringLiteral(
         transformFromNode(path.node, null, babelOptions)
