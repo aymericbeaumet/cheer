@@ -42,4 +42,66 @@ describe('expression#expand', () => {
     ])
   })
 
+  it('should expand BooleanLiteral to the wrap plugin', () => {
+    expect(expand(`
+      true
+      false
+    `)).toEqual([
+      'wrap(true);',
+      'wrap(false);',
+    ])
+  })
+
+  it('should expand NullLiteral to the wrap plugin', () => {
+    expect(expand(`
+      null
+    `)).toEqual([
+      'wrap(null);',
+    ])
+  })
+
+  it('should expand NumericLiteral to the wrap plugin', () => {
+    expect(expand(`
+      -1;
+      0;
+      +1;
+    `)).toEqual([
+      'wrap(-1);',
+      'wrap(0);',
+      'wrap(+1);',
+    ])
+  })
+
+  it('should expand RegExpLiteral to the wrap plugin', () => {
+    expect(expand(`
+      /foobar/
+    `)).toEqual([
+      'wrap(/foobar/);',
+    ])
+  })
+
+  it('should expand StringLiteral to the wrap plugin', () => {
+    expect(expand(`
+      'foo'
+      "bar"
+    `)).toEqual([
+      'wrap("foo");',
+      'wrap("bar");',
+    ])
+  })
+
+  it('should expand TemplateLiteral to the template plugin', () => {
+    expect(expand(`
+\`
+multi
+line
+\${1+1}
+\${'foo'}
+\${"bar"}
+\`
+    `)).toEqual([
+      'template("\\nmulti\\nline\\n${1+1}\\n${\\"foo\\"}\\n${\\"bar\\"}\\n\");',
+    ])
+  })
+
 })

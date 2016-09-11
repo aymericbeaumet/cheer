@@ -2,6 +2,13 @@ import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
 import { isEmpty, sortBy } from 'lodash'
 
+const babelOptions = {
+  babelrc: false,
+  comments: false,
+  compact: true,
+  minified: true,
+}
+
 /**
  * Leverage the Babel toolchain to apply several transformations. Also split by
  * root ExpressionStatement. See the plugins documentation below.
@@ -9,34 +16,52 @@ import { isEmpty, sortBy } from 'lodash'
  * @return {String} - the expanded code
  */
 export function expand(code) {
-  const options = {
-    babelrc: false,
-    comments: false,
-    compact: true,
-    minified: true,
-  }
   const { ast } = transform(code, {
-    ...options,
+    ...babelOptions,
     code: false,
     plugins: [
+      fromBinaryExpressionToCallExpression,
       fromDirectiveToExpressionStatements,
       fromIdentifierToCallExpression,
-      fromBinaryExpressionToCallExpression,
+      fromLiteralToWrapPlugin,
     ],
   })
   return ast.program.body.map(expressionStatement => {
     if (!t.isExpressionStatement(expressionStatement)) {
       throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
     }
-    const root = t.file(
-      t.program([
-        expressionStatement,
-      ]),
-      null,
-      null
-    )
-    return transformFromAst(root, null, options).code
+    return transformFromNode(expressionStatement, null, babelOptions).code
   })
+}
+
+/**
+ * Tranform the `|` binary operator between two CallExpression or Identifier
+ * into a `.pipe()` call.
+ * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
+ */
+export function fromBinaryExpressionToCallExpression() {
+  const isCallExpressionOrIdentifier = node =>
+    t.isCallExpression(node) || t.isIdentifier(node)
+  return {
+    visitor: {
+      BinaryExpression: {
+        exit(path) {
+          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
+              isCallExpressionOrIdentifier(path.node.left) &&
+              isCallExpressionOrIdentifier(path.node.right)) {
+            path.replaceWith(t.callExpression(
+              t.memberExpression(
+                path.node.left,
+                t.identifier('pipe'),
+                false
+              ),
+              [ path.node.right ]
+            ))
+          }
+        },
+      },
+    },
+  }
 }
 
 /**
@@ -96,34 +121,55 @@ export function fromIdentifierToCallExpression() {
   }
 }
 
-  /**
-   * Tranform the `|` binary operator between two CallExpression or Identifier
-   * into a `.pipe()` call.
-   * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
-   */
-export function fromBinaryExpressionToCallExpression() {
-  const isCallExpressionOrIdentifier = node =>
-    t.isCallExpression(node) || t.isIdentifier(node)
+/**
+ */
+export function fromLiteralToWrapPlugin() {
+  const wrap = path => {
+    let currentPath = path
+    while (t.isUnaryExpression(currentPath.parentPath.node)) {
+      currentPath = currentPath.parentPath
+    }
+    const callee = t.identifier('wrap')
+    const args = [ currentPath.node ]
+    currentPath.replaceWith(t.callExpression(callee, args))
+    currentPath.stop()
+  }
+  const template = path => {
+    const callee = t.identifier('template')
+    const args = [
+      t.stringLiteral(
+        transformFromNode(path.node, null, babelOptions)
+          .code
+          .slice(
+            +Number('`'.length),
+            -Number('`\n'.length)
+          )
+      ),
+    ]
+    path.replaceWith(t.callExpression(callee, args))
+    path.stop()
+  }
   return {
     visitor: {
-      BinaryExpression: {
-        exit(path) {
-          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
-              isCallExpressionOrIdentifier(path.node.left) &&
-              isCallExpressionOrIdentifier(path.node.right)) {
-            path.replaceWith(t.callExpression(
-              t.memberExpression(
-                path.node.left,
-                t.identifier('pipe'),
-                false
-              ),
-              [ path.node.right ]
-            ))
-          }
-        },
-      },
+      BooleanLiteral: wrap,
+      NullLiteral: wrap,
+      NumericLiteral: wrap,
+      RegExpLiteral: wrap,
+      StringLiteral: wrap,
+      TemplateLiteral: template,
     },
   }
+}
+
+function transformFromNode(node, code = null, options = {}) {
+  const expressionStatement = t.isExpressionStatement(node) ? node : t.expressionStatement(node)
+  return transformFromAst(t.file(
+    t.program([
+      expressionStatement,
+    ]),
+    null,
+    null
+  ), code, options)
 }
 
 function ExpressionError(message) {
