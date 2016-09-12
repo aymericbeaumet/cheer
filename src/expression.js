@@ -124,22 +124,18 @@ export function fromIdentifierToCallExpression() {
 /**
  */
 export function fromLiteralToWrapperPlugins() {
-  const wrap = path => {
-    let currentPath = path
-    while (t.isUnaryExpression(currentPath.parentPath.node)) {
-      currentPath = currentPath.parentPath
-    }
+  const wrap = node => {
     const callee = t.identifier('wrap')
-    const args = [ currentPath.node ]
-    currentPath.replaceWith(t.callExpression(callee, args))
-    currentPath.stop()
+    const args = [
+      node,
+    ]
+    return t.callExpression(callee, args)
   }
-  const template = path => {
-    const identifier = isEmpty(path.node.expressions) ? 'wrap' : 'template'
-    const callee = t.identifier(identifier)
+  const template = node => {
+    const callee = t.identifier(isEmpty(node.expressions) ? 'wrap' : 'template')
     const args = [
       t.stringLiteral(
-        transformFromNode(path.node, null, babelOptions)
+        transformFromNode(node, null, babelOptions)
           .code
           .slice(
             +Number('`'.length),
@@ -147,19 +143,31 @@ export function fromLiteralToWrapperPlugins() {
           )
       ),
     ]
-    path.replaceWith(t.callExpression(callee, args))
-    path.stop()
+    return t.callExpression(callee, args)
   }
   return {
     visitor: {
-      ArrayExpression: wrap,
-      BooleanLiteral: wrap,
-      NullLiteral: wrap,
-      NumericLiteral: wrap,
-      ObjectExpression: wrap,
-      RegExpLiteral: wrap,
-      StringLiteral: wrap,
-      TemplateLiteral: template,
+      Program(path) {
+        path.node.body = path.node.body.map(child => {
+          if (t.isExpressionStatement(child)) {
+            const { expression } = child
+            if (t.isArrayExpression(expression) ||
+                t.isBooleanLiteral(expression) ||
+                t.isNullLiteral(expression) ||
+                t.isNumericLiteral(expression) ||
+                t.isObjectExpression(expression) ||
+                t.isRegExpLiteral(expression) ||
+                t.isStringLiteral(expression) ||
+                t.isUnaryExpression(expression)) {
+              return t.expressionStatement(wrap(expression))
+            }
+            if (t.isTemplateLiteral(expression)) {
+              return t.expressionStatement(template(expression))
+            }
+          }
+          return child
+        })
+      },
     },
   }
 }

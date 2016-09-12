@@ -128,4 +128,12 @@ no expressions
     ])
   })
 
+  it('should not expand literals in nested expression statements', () => {
+    expect(expand(`
+      identifier([], true, false, null, -1, 0, +1, {}, /regex/, "", \`\`)
+    `)).toEqual([
+      'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``);',
+    ])
+  })
+
 })
