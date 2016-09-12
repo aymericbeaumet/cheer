@@ -40,8 +40,7 @@ export function expand(code) {
  * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
  */
 export function fromBinaryExpressionToCallExpression() {
-  const isCallExpressionOrIdentifier = node =>
-    t.isCallExpression(node) || t.isIdentifier(node)
+  const isCallExpressionOrIdentifier = node => [ 'CallExpression', 'Identifier' ].includes(node.type)
   return {
     visitor: {
       BinaryExpression: {
@@ -133,17 +132,15 @@ export function fromLiteralToWrapperPlugins() {
       case 'ObjectExpression':
       case 'RegExpLiteral':
       case 'StringLiteral':
-      case 'UnaryExpression':
-      {
-        const callee = t.identifier('wrap')
+      case 'UnaryExpression': {
+        const callee = t.identifier('raw')
         const args = [
           node,
         ]
         return t.callExpression(callee, args)
       }
-      case 'TemplateLiteral':
-      {
-        const callee = t.identifier(isEmpty(node.expressions) ? 'wrap' : 'template')
+      case 'TemplateLiteral': {
+        const callee = t.identifier(isEmpty(node.expressions) ? 'raw' : 'template')
         const args = [
           t.stringLiteral(
             transformFromNode(node, null, babelOptions)
@@ -181,14 +178,15 @@ export function fromLiteralToWrapperPlugins() {
 }
 
 function transformFromNode(node, code = null, options = {}) {
-  const expressionStatement = t.isExpressionStatement(node) ? node : t.expressionStatement(node)
-  return transformFromAst(t.file(
-    t.program([
-      expressionStatement,
-    ]),
-    null,
-    null
-  ), code, options)
+  const ast =
+    t.file(
+      t.program([
+        t.isExpressionStatement(node) ? node : t.expressionStatement(node),
+      ]),
+      null,
+      null
+    )
+  return transformFromAst(ast, code, options)
 }
 
 function ExpressionError(message) {

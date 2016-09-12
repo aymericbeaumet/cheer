@@ -1,5 +1,5 @@
 <!---
-  open('./package.json') | `# ${name} `
+  open('./package.json') | json | `# ${name} `
   badge([
     'travis',
     'npm/v',
@@ -8,9 +8,7 @@
 --->
 <!--->
 
-<!---
-  open('./package.json') | `> ${description}`
---->
+<!--- open('./package.json') | json | `> ${description}` --->
 <!--->
 
 ...
@@ -19,7 +17,7 @@
 
 <!---
   '```bash'
-  open('./package.json') | `npm install --global ${name}`
+  open('./package.json') | json | `npm install --global ${name}`
   '```'
 --->
 <!--->
@@ -28,16 +26,14 @@
 
 ### API
 
-<!---
-  jsdoc()
---->
+<!--- jsdoc --->
 <!--->
 
 ### CLI
 
 <!---
   '```bash'
-  open('./package.json') | `npm install ---global ${name}`
+  open('./package.json') | json | `npm install ---global ${name}`
   '```'
 --->
 <!--->

@@ -44,73 +44,73 @@ describe('expand()', () => {
     ])
   })
 
-  it('should expand ArrayExpression to the wrap plugin', () => {
+  it('should expand ArrayExpression to the raw plugin', () => {
     expect(expand(`
       []
     `)).toEqual([
-      'wrap([]);',
+      'raw([]);',
     ])
   })
 
-  it('should expand BooleanLiteral to the wrap plugin', () => {
+  it('should expand BooleanLiteral to the raw plugin', () => {
     expect(expand(`
       true
       false
     `)).toEqual([
-      'wrap(true);',
-      'wrap(false);',
+      'raw(true);',
+      'raw(false);',
     ])
   })
 
-  it('should expand NullLiteral to the wrap plugin', () => {
+  it('should expand NullLiteral to the raw plugin', () => {
     expect(expand(`
       null
     `)).toEqual([
-      'wrap(null);',
+      'raw(null);',
     ])
   })
 
-  it('should expand NumericLiteral to the wrap plugin', () => {
+  it('should expand NumericLiteral to the raw plugin', () => {
     expect(expand(`
       0
     `)).toEqual([
-      'wrap(0);',
+      'raw(0);',
     ])
   })
 
-  it('should expand ObjectExpression to the wrap plugin', () => {
+  it('should expand ObjectExpression to the raw plugin', () => {
     expect(expand(`
       ({})
     `)).toEqual([
-      'wrap({});',
+      'raw({});',
     ])
   })
 
-  it('should expand RegExpLiteral to the wrap plugin', () => {
+  it('should expand RegExpLiteral to the raw plugin', () => {
     expect(expand(`
       /foobar/
     `)).toEqual([
-      'wrap(/foobar/);',
+      'raw(/foobar/);',
     ])
   })
 
-  it('should expand StringLiteral to the wrap plugin', () => {
+  it('should expand StringLiteral to the raw plugin', () => {
     expect(expand(`
       'foo'
       "bar"
     `)).toEqual([
-      'wrap("foo");',
-      'wrap("bar");',
+      'raw("foo");',
+      'raw("bar");',
     ])
   })
 
-  it('should expand UnaryExpression to the wrap plugin', () => {
+  it('should expand UnaryExpression to the raw plugin', () => {
     expect(expand(`
       -1;
       +1;
     `)).toEqual([
-      'wrap(-1);',
-      'wrap(+1);',
+      'raw(-1);',
+      'raw(+1);',
     ])
   })
 
@@ -124,13 +124,13 @@ one expression: \${1}
     ])
   })
 
-  it('should expand TemplateLiteral to the wrap plugin if no expressions', () => {
+  it('should expand TemplateLiteral to the raw plugin if no expressions', () => {
     expect(expand(`
 \`
 no expressions
 \`
     `)).toEqual([
-      'wrap("\\nno expressions\\n");',
+      'raw("\\nno expressions\\n");',
     ])
   })
 
