@@ -152,9 +152,11 @@ export function fromLiteralToWrapperPlugins() {
   }
   return {
     visitor: {
+      ArrayExpression: wrap,
       BooleanLiteral: wrap,
       NullLiteral: wrap,
       NumericLiteral: wrap,
+      ObjectExpression: wrap,
       RegExpLiteral: wrap,
       StringLiteral: wrap,
       TemplateLiteral: template,

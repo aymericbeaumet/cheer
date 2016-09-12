@@ -44,6 +44,14 @@ describe('expand()', () => {
     ])
   })
 
+  it('should expand ArrayExpression to the wrap plugin', () => {
+    expect(expand(`
+      []
+    `)).toEqual([
+      'wrap([]);',
+    ])
+  })
+
   it('should expand BooleanLiteral to the wrap plugin', () => {
     expect(expand(`
       true
@@ -89,6 +97,14 @@ describe('expand()', () => {
     `)).toEqual([
       'wrap("foo");',
       'wrap("bar");',
+    ])
+  })
+
+  it('should expand ObjectExpression to the wrap plugin', () => {
+    expect(expand(`
+      ({})
+    `)).toEqual([
+      'wrap({});',
     ])
   })
 
