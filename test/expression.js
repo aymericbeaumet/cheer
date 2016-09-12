@@ -72,13 +72,17 @@ describe('expand()', () => {
 
   it('should expand NumericLiteral to the wrap plugin', () => {
     expect(expand(`
-      -1;
-      0;
-      +1;
+      0
     `)).toEqual([
-      'wrap(-1);',
       'wrap(0);',
-      'wrap(+1);',
+    ])
+  })
+
+  it('should expand ObjectExpression to the wrap plugin', () => {
+    expect(expand(`
+      ({})
+    `)).toEqual([
+      'wrap({});',
     ])
   })
 
@@ -100,11 +104,13 @@ describe('expand()', () => {
     ])
   })
 
-  it('should expand ObjectExpression to the wrap plugin', () => {
+  it('should expand UnaryExpression to the wrap plugin', () => {
     expect(expand(`
-      ({})
+      -1;
+      +1;
     `)).toEqual([
-      'wrap({});',
+      'wrap(-1);',
+      'wrap(+1);',
     ])
   })
 

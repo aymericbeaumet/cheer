@@ -125,47 +125,55 @@ export function fromIdentifierToCallExpression() {
  */
 export function fromLiteralToWrapperPlugins() {
   const wrap = node => {
-    const callee = t.identifier('wrap')
-    const args = [
-      node,
-    ]
-    return t.callExpression(callee, args)
-  }
-  const template = node => {
-    const callee = t.identifier(isEmpty(node.expressions) ? 'wrap' : 'template')
-    const args = [
-      t.stringLiteral(
-        transformFromNode(node, null, babelOptions)
-          .code
-          .slice(
-            +Number('`'.length),
-            -Number('`\n'.length)
-          )
-      ),
-    ]
-    return t.callExpression(callee, args)
+    switch (node.type) {
+      case 'ArrayExpression':
+      case 'BooleanLiteral':
+      case 'NullLiteral':
+      case 'NumericLiteral':
+      case 'ObjectExpression':
+      case 'RegExpLiteral':
+      case 'StringLiteral':
+      case 'UnaryExpression':
+      {
+        const callee = t.identifier('wrap')
+        const args = [
+          node,
+        ]
+        return t.callExpression(callee, args)
+      }
+      case 'TemplateLiteral':
+      {
+        const callee = t.identifier(isEmpty(node.expressions) ? 'wrap' : 'template')
+        const args = [
+          t.stringLiteral(
+            transformFromNode(node, null, babelOptions)
+              .code
+              .slice(
+                +Number('`'.length),
+                -Number('`\n'.length)
+              )
+          ),
+        ]
+        return t.callExpression(callee, args)
+      }
+      default:
+        return node
+    }
   }
   return {
     visitor: {
+      BinaryExpression(path) {
+        path.node.left = wrap(path.node.left)
+        path.node.right = wrap(path.node.right)
+      },
       Program(path) {
         path.node.body = path.node.body.map(child => {
-          if (t.isExpressionStatement(child)) {
-            const { expression } = child
-            if (t.isArrayExpression(expression) ||
-                t.isBooleanLiteral(expression) ||
-                t.isNullLiteral(expression) ||
-                t.isNumericLiteral(expression) ||
-                t.isObjectExpression(expression) ||
-                t.isRegExpLiteral(expression) ||
-                t.isStringLiteral(expression) ||
-                t.isUnaryExpression(expression)) {
-              return t.expressionStatement(wrap(expression))
-            }
-            if (t.isTemplateLiteral(expression)) {
-              return t.expressionStatement(template(expression))
-            }
+          switch (child.type) {
+            case 'ExpressionStatement':
+              return t.expressionStatement(wrap(child.expression))
+            default:
+              return child
           }
-          return child
         })
       },
     },
