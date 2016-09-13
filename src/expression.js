@@ -11,7 +11,7 @@ import { isEmpty, sortBy } from 'lodash'
  */
 export function expand(code) {
   const pluginsSequence = [
-    allowDirectivesAsStringLiteral,
+    prependDirectivesAsStringLiteral,
     allowIdentifierAsCallExpression,
     allowPipeOperatorAsStreamPipe,
     wrapLiteral,
@@ -30,7 +30,7 @@ export function expand(code) {
 /**
  * Reinject the Directive's as StringLiteral's.
  */
-export function allowDirectivesAsStringLiteral() {
+export function prependDirectivesAsStringLiteral() {
   return {
     visitor: {
       Program(path) {
