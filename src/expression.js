@@ -13,12 +13,15 @@ export function expand(code) {
   const pluginsSequence = [
     prependDirectivesAsStringLiteral,
     allowIdentifierAsCallExpression,
-    allowPipeOperatorAsStreamPipe,
     wrapLiteral,
+    allowPipeOperatorAsStreamPipe,
   ]
-  const finalAst = pluginsSequence.reduce((ast, plugin) => {
-    return transformFromAst(ast, null, babelOptions({ code: false, plugins: [ plugin ] })).ast
-  }, transform(code, babelOptions()).ast)
+  const finalAst = pluginsSequence.reduce((ast, plugin) =>
+    transformFromAst(ast, null, babelOptions({
+      code: false,
+      plugins: [ plugin ],
+    })).ast
+  , transform(code, babelOptions()).ast)
   return finalAst.program.body.map(expressionStatement => {
     if (!t.isExpressionStatement(expressionStatement)) {
       throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
@@ -29,6 +32,7 @@ export function expand(code) {
 
 /**
  * Reinject the Directive's as StringLiteral's.
+ * @return {Object} - the babel plugin options
  */
 export function prependDirectivesAsStringLiteral() {
   return {
@@ -55,37 +59,10 @@ export function prependDirectivesAsStringLiteral() {
 }
 
 /**
- * Tranform the `|` binary operator between two CallExpression or Identifier
- * into a `.pipe()` call.
- * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
- */
-export function allowPipeOperatorAsStreamPipe() {
-  return {
-    visitor: {
-      BinaryExpression: {
-        exit(path) {
-          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
-              t.isCallExpression(path.node.left) &&
-              t.isCallExpression(path.node.right)) {
-            path.replaceWith(t.callExpression(
-              t.memberExpression(
-                path.node.left,
-                t.identifier('pipe'),
-                false
-              ),
-              [ path.node.right ]
-            ))
-          }
-        },
-      },
-    },
-  }
-}
-
-/**
  * Transform the Identifier which are not callee of a CallExpression into a
  * CallExpression.
  * Syntactic sugar for `a` instead of `a()`
+ * @return {Object} - the babel plugin options
  */
 export function allowIdentifierAsCallExpression() {
   const toCallExpression = identifier => {
@@ -99,20 +76,18 @@ export function allowIdentifierAsCallExpression() {
         path.node.left = toCallExpression(path.node.left)
         path.node.right = toCallExpression(path.node.right)
       },
-      CallExpression(path) {
-        path.node.arguments = path.node.arguments.map(toCallExpression)
-      },
       ExpressionStatement(path) {
         path.node.expression = toCallExpression(path.node.expression)
-      },
-      MemberExpression(path) {
-        path.node.object = toCallExpression(path.node.object)
       },
     },
   }
 }
 
 /**
+ * Wrap the literals into a stream. Support template literals.
+ * Syntactic sugar for `'foobar'` instead of `raw('foobar')`, or `\`${name}\``
+ * instead of `template('${name}')`
+ * @return {Object} - the babel plugin options
  */
 export function wrapLiteral() {
   const wrap = node => {
@@ -167,15 +142,56 @@ export function wrapLiteral() {
   }
 }
 
-function babelOptions(...args) {
+/**
+ * Tranform the `|` binary operator between two CallExpression or Identifier
+ * into a `.pipe()` call (left precedence).
+ * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
+ * @return {Object} - the babel plugin options
+ */
+export function allowPipeOperatorAsStreamPipe() {
+  return {
+    visitor: {
+      BinaryExpression: {
+        exit(path) {
+          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
+              t.isCallExpression(path.node.left) &&
+              t.isCallExpression(path.node.right)) {
+            path.replaceWith(t.callExpression(
+              t.memberExpression(
+                path.node.left,
+                t.identifier('pipe'),
+                false
+              ),
+              [ path.node.right ]
+            ))
+          }
+        },
+      },
+    },
+  }
+}
+
+/**
+ * The shared babel options, can be overriden.
+ * @param {...Object=} overrides - the overrides
+ * @return {Object} - The babel options
+ */
+function babelOptions(...overrides) {
   return Object.assign({
     babelrc: false,
     comments: false,
     compact: true,
     minified: true,
-  }, ...args)
+  }, ...overrides)
 }
 
+/**
+ * Extend babel.transformFromAst to allow to transform from a single node.
+ * @param {Node} node - An AST node
+ * @param {String} code - the code to use for the source maps
+ * @param {Options=} options - the transformation options
+ * @return {Object} - a { code, map, ast } result
+ */
 function transformFromNode(node, code = null, options = {}) {
   const ast =
     t.file(
@@ -188,6 +204,11 @@ function transformFromNode(node, code = null, options = {}) {
   return transformFromAst(ast, code, options)
 }
 
+/**
+ * Return a new ExpressionError.
+ * @param {String} message - the message to wrap in the error
+ * @return {ExpressionError} - the error
+ */
 function ExpressionError(message) {
   const error = new Error(message)
   error.name = 'ExpressionError'

@@ -1,7 +1,6 @@
 import { expand } from '../src/expression'
 
 describe('expand()', () => {
-
   it('should throw if a different type than ExpressionStatement is found in the Program body', () => {
     expect(expand.bind(null, `
       const foo = 'bar'
@@ -11,7 +10,7 @@ describe('expand()', () => {
   it('should split in several ExpressionStatement', () => {
     expect(expand(`
       a;b
-    `).length).toBe(2)
+    `).length).toBe(2) // eslint-disable-line no-magic-numbers
   })
 
   it('should remove comments', () => {
@@ -20,17 +19,21 @@ describe('expand()', () => {
     `)).toEqual([])
   })
 
+  it('should interpret directives as string literals', () => {
+    expect(expand(`
+      'use strict'
+    `)).toEqual([
+      'raw("use strict");',
+    ])
+  })
+
   it('should expand from Identifier to CallExpression', () => {
     expect(expand(`
       a | b
       a
-      a(b)
-      a.pipe
     `)).toEqual([
       'a().pipe(b());',
       'a();',
-      'a(b());',
-      'a().pipe;',
     ])
   })
 
@@ -134,6 +137,14 @@ no expressions
     ])
   })
 
+  it('should allow complex use cases', () => {
+    expect(expand(`
+      open('./package.json') | json | \`npm install --global \${name}\`
+    `)).toEqual([
+      'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));',
+    ])
+  })
+
   it('should not expand literals in nested expression statements', () => {
     expect(expand(`
       identifier([], true, false, null, -1, 0, +1, {}, /regex/, "", \`\`)
@@ -142,4 +153,19 @@ no expressions
     ])
   })
 
+  it('should not expand object from MemberExpression ', () => {
+    expect(expand(`
+      a.b
+    `)).toEqual([
+      'a.b;',
+    ]);
+  })
+
+  it('should not expand Identifier from CallExpression arguments', () => {
+    expect(expand(`
+      a(b)
+    `)).toEqual([
+      'a(b);',
+    ])
+  })
 })
