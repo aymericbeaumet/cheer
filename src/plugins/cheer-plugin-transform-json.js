@@ -9,6 +9,10 @@ class Json extends Transform {
   }
 }
 
-export default function json(...args) {
-  return new Json(...args)
+export default function cheerPluginTransformJson() {
+  return {
+    cheer: {
+      json: Json,
+    },
+  }
 }

@@ -11,6 +11,10 @@ class Raw extends Readable {
   }
 }
 
-export default function raw(...args) {
-  return new Raw(...args)
+export default function cheerPluginReadableRaw() {
+  return {
+    cheer: {
+      raw: Raw,
+    },
+  }
 }

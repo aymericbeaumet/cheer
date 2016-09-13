@@ -49,6 +49,10 @@ class Open extends Readable {
   }
 }
 
-export default function open(...args) {
-  return new Open(...args)
+export default function cheerPluginReadableOpen() {
+  return {
+    cheer: {
+      open: Open,
+    },
+  }
 }

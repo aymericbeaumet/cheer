@@ -13,6 +13,10 @@ class Template extends Transform {
   }
 }
 
-export default function template(...args) {
-  return new Template(...args)
+export default function cheerPluginTransformTemplate() {
+  return {
+    cheer: {
+      template: Template,
+    },
+  }
 }
