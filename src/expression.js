@@ -1,5 +1,6 @@
 import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
+import { parse } from 'babylon'
 import { isEmpty, sortBy } from 'lodash'
 
 const babelOptions = {
@@ -16,17 +17,20 @@ const babelOptions = {
  * @return {String} - the expanded code
  */
 export function expand(code) {
-  const { ast } = transform(code, {
-    ...babelOptions,
-    code: false,
-    plugins: [
-      fromBinaryExpressionToCallExpression,
-      fromDirectiveToExpressionStatements,
-      fromIdentifierToCallExpression,
-      fromLiteralToWrapperPlugins,
-    ],
-  })
-  return ast.program.body.map(expressionStatement => {
+  const plugins = [
+    fromBinaryExpressionToCallExpression,
+    fromDirectiveToExpressionStatements,
+    fromIdentifierToCallExpression,
+    fromLiteralToWrapperPlugins,
+  ]
+  const finalAst = plugins.reduce((ast, plugin) => {
+    return transformFromAst(ast, null, {
+      ...babelOptions,
+      code: false,
+      plugins: [ plugin ],
+    }).ast
+  }, parse(code))
+  return finalAst.program.body.map(expressionStatement => {
     if (!t.isExpressionStatement(expressionStatement)) {
       throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
     }
