@@ -3,12 +3,12 @@ import * as t from 'babel-types'
 import { parse } from 'babylon'
 import { isEmpty, sortBy } from 'lodash'
 
-const babelOptions = {
+const babelOptions = (...args) => Object.assign({
   babelrc: false,
   comments: false,
   compact: true,
   minified: true,
-}
+}, ...args)
 
 /**
  * Leverage the Babel toolchain to apply several transformations. Also split by
@@ -24,17 +24,13 @@ export function expand(code) {
     fromLiteralToWrapperPlugins,
   ]
   const finalAst = plugins.reduce((ast, plugin) => {
-    return transformFromAst(ast, null, {
-      ...babelOptions,
-      code: false,
-      plugins: [ plugin ],
-    }).ast
+    return transformFromAst(ast, null, babelOptions({ code: false, plugins: [ plugin ] })).ast
   }, parse(code))
   return finalAst.program.body.map(expressionStatement => {
     if (!t.isExpressionStatement(expressionStatement)) {
       throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
     }
-    return transformFromNode(expressionStatement, null, babelOptions).code
+    return transformFromNode(expressionStatement, null, babelOptions()).code
   })
 }
 
@@ -147,7 +143,7 @@ export function fromLiteralToWrapperPlugins() {
         const callee = t.identifier(isEmpty(node.expressions) ? 'raw' : 'template')
         const args = [
           t.stringLiteral(
-            transformFromNode(node, null, babelOptions)
+            transformFromNode(node, null, babelOptions())
               .code
               .slice(
                 +Number('`'.length),
