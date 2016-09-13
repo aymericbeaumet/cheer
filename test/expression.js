@@ -123,7 +123,7 @@ describe('expand()', () => {
 one expression: \${1}
 \`
     `)).toEqual([
-      'template("\\none expression: ${1}\\n");',
+      'template("\\none expression: ${1}\\n");', // eslint-disable-line no-template-curly-in-string
     ])
   })
 
@@ -141,7 +141,7 @@ no expressions
     expect(expand(`
       open('./package.json') | json | \`npm install --global \${name}\`
     `)).toEqual([
-      'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));',
+      'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));', // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -158,7 +158,7 @@ no expressions
       a.b
     `)).toEqual([
       'a.b;',
-    ]);
+    ])
   })
 
   it('should not expand Identifier from CallExpression arguments', () => {

@@ -46,7 +46,10 @@
   "eslintConfig": {
     "extends": [
       "opinionated/node"
-    ]
+    ],
+    "env": {
+      "jest": true
+    }
   },
   "jest": {
     "coverageDirectory": "coverage",
