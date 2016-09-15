@@ -67,8 +67,8 @@
       ]
     ],
     "presets": [
-      "es2015-node4",
-      "stage-2"
+      "stage-2",
+      "es2015-node4"
     ],
     "sourceMaps": "inline"
   }

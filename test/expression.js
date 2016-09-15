@@ -1,4 +1,4 @@
-import { expand } from '../src/expression'
+import expand from '../src/expression'
 
 describe('expand()', () => {
   it('should throw if a different type than ExpressionStatement is found in the Program body', () => {

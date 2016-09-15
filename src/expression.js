@@ -11,7 +11,7 @@ const STREAM_PIPE = 'pipe'
  * @param {String} code - the code to expand
  * @return {String} - the expanded code
  */
-export function expand(code) {
+export default function expand(code) {
   const pluginsSequence = [
     fromDirectiveToStringLiteral,
     fromBinaryExpressionPipeToStreamPipe,
