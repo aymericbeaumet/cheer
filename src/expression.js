@@ -62,6 +62,9 @@ export function fromDirectiveToStringLiteral() {
 }
 
 /**
+ * Tranform Identifier to CallExpression.
+ * Syntactic sugar for: `a` instead of `a()`
+ * @return {Object} - the babel plugin options
  */
 export function fromIdentifierToCallExpression() {
   const toCallExpression = node => {
@@ -89,6 +92,9 @@ export function fromIdentifierToCallExpression() {
 }
 
 /**
+ * Transform MemberExpression to CallExpression.
+ * Syntactic sugar for: `a.b` instead of `a.b()`
+ * @return {Object} - the babel plugin options
  */
 export function fromMemberExpressionToCallExpression() {
   const toCallExpression = node => {
@@ -115,8 +121,7 @@ export function fromMemberExpressionToCallExpression() {
 }
 
 /**
- * Recursively tranform the `|` binary operator into a `.pipe()` call (left
- * precedence).
+ * Tranform the `|` binary operator into a `.pipe()` call (left precedence).
  * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
  * @return {Object} - the babel plugin options
  */
@@ -198,6 +203,9 @@ export function fromLiteralToWrapper() {
 }
 
 /**
+ * Check whether a CallExpression is a .pipe()
+ * @param {CallExpression} node - the node to check
+ * @return {Boolean} - true if a .pipe(), false otherwise
  */
 function isPipeCallExpression(node) {
   return t.isMemberExpression(node.callee, { computed: false }) &&
