@@ -7,23 +7,39 @@ describe('expand()', () => {
     `)).toThrowError('Only ExpressionStatement are allowed as the root nodes')
   })
 
-  it('should split in several ExpressionStatement', () => {
-    expect(expand(`
-      a;b
-    `).length).toBe(2) // eslint-disable-line no-magic-numbers
-  })
-
   it('should remove comments', () => {
     expect(expand(`
       // test
     `)).toEqual([])
   })
 
+  it('should support several ExpressionStatement', () => {
+    expect(expand(`
+      a;
+      b;
+    `)).toEqual([
+      [ 'a();' ],
+      [ 'b();' ],
+    ])
+  })
+
+  it('should support several SequenceExpression', () => {
+    expect(expand(`
+      a | b, c | d
+      e.pipe(f), g | h()
+      i, j
+    `)).toEqual([
+      [ 'a().pipe(b());', 'c().pipe(d());' ],
+      [ 'e().pipe(f());', 'g().pipe(h());' ],
+      [ 'i();', 'j();' ],
+    ])
+  })
+
   it('should interpret directives as string literals', () => {
     expect(expand(`
       'use strict'
     `)).toEqual([
-      'raw("use strict");',
+      [ 'raw("use strict");' ],
     ])
   })
 
@@ -32,8 +48,8 @@ describe('expand()', () => {
       a | b
       a
     `)).toEqual([
-      'a().pipe(b());',
-      'a();',
+      [ 'a().pipe(b());' ],
+      [ 'a();' ],
     ])
   })
 
@@ -41,7 +57,7 @@ describe('expand()', () => {
     expect(expand(`
       a.b
     `)).toEqual([
-      'a.b();',
+      [ 'a.b();' ],
     ])
   })
 
@@ -50,8 +66,8 @@ describe('expand()', () => {
       a() | b()
       a() | b() | c()
     `)).toEqual([
-      'a().pipe(b());',
-      'a().pipe(b()).pipe(c());',
+      [ 'a().pipe(b());' ],
+      [ 'a().pipe(b()).pipe(c());' ],
     ])
   })
 
@@ -60,8 +76,8 @@ describe('expand()', () => {
       a().pipe(b()) | c;
       (a | b).pipe(c);
     `)).toEqual([
-      'a().pipe(b()).pipe(c());',
-      'a().pipe(b()).pipe(c());',
+      [ 'a().pipe(b()).pipe(c());' ],
+      [ 'a().pipe(b()).pipe(c());' ],
     ])
   })
 
@@ -69,7 +85,7 @@ describe('expand()', () => {
     expect(expand(`
       []
     `)).toEqual([
-      'raw([]);',
+      [ 'raw([]);' ],
     ])
   })
 
@@ -78,8 +94,8 @@ describe('expand()', () => {
       true
       false
     `)).toEqual([
-      'raw(true);',
-      'raw(false);',
+      [ 'raw(true);' ],
+      [ 'raw(false);' ],
     ])
   })
 
@@ -87,7 +103,7 @@ describe('expand()', () => {
     expect(expand(`
       null
     `)).toEqual([
-      'raw(null);',
+      [ 'raw(null);' ],
     ])
   })
 
@@ -95,7 +111,7 @@ describe('expand()', () => {
     expect(expand(`
       0
     `)).toEqual([
-      'raw(0);',
+      [ 'raw(0);' ],
     ])
   })
 
@@ -103,7 +119,7 @@ describe('expand()', () => {
     expect(expand(`
       ({})
     `)).toEqual([
-      'raw({});',
+      [ 'raw({});' ],
     ])
   })
 
@@ -111,7 +127,7 @@ describe('expand()', () => {
     expect(expand(`
       /foobar/
     `)).toEqual([
-      'raw(/foobar/);',
+      [ 'raw(/foobar/);' ],
     ])
   })
 
@@ -120,8 +136,8 @@ describe('expand()', () => {
       'foo'
       "bar"
     `)).toEqual([
-      'raw("foo");',
-      'raw("bar");',
+      [ 'raw("foo");' ],
+      [ 'raw("bar");' ],
     ])
   })
 
@@ -131,9 +147,9 @@ describe('expand()', () => {
       +1;
       -' ';
     `)).toEqual([
-      'raw(-1);',
-      'raw(+1);',
-      'raw(-" ");',
+      [ 'raw(-1);' ],
+      [ 'raw(+1);' ],
+      [ 'raw(-" ");' ],
     ])
   })
 
@@ -141,7 +157,7 @@ describe('expand()', () => {
     expect(expand(`
       \`one expression: \${1}\`
     `)).toEqual([
-      'template("one expression: ${1}");', // eslint-disable-line no-template-curly-in-string
+      [ 'template("one expression: ${1}");' ], // eslint-disable-line no-template-curly-in-string
     ])
   })
 
@@ -149,7 +165,7 @@ describe('expand()', () => {
     expect(expand(`
       \`no expressions\`
     `)).toEqual([
-      'raw("no expressions");',
+      [ 'raw("no expressions");' ],
     ])
   })
 
@@ -157,7 +173,7 @@ describe('expand()', () => {
     expect(expand(`
       a.b.c | d.e.f | g.h.i | \`\${name}\`
     `)).toEqual([
-      'a.b.c().pipe(d.e.f()).pipe(g.h.i()).pipe(template("${name}"));', // eslint-disable-line max-len, no-template-curly-in-string
+      [ 'a.b.c().pipe(d.e.f()).pipe(g.h.i()).pipe(template("${name}"));' ], // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -165,7 +181,7 @@ describe('expand()', () => {
     expect(expand(`
       open('./package.json') | json | \`npm install --global \${name}\`
     `)).toEqual([
-      'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));', // eslint-disable-line max-len, no-template-curly-in-string
+      [ 'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));' ], // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -173,7 +189,7 @@ describe('expand()', () => {
     expect(expand(`
       identifier([], true, false, null, -1, 0, +1, {}, /regex/, "", \`\`)
     `)).toEqual([
-      'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``);',
+      [ 'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``);' ],
     ])
   })
 })

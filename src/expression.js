@@ -25,12 +25,16 @@ export default function expand(code) {
       plugins: [ plugin ],
     })).ast
   , transform(code, babelOptions()).ast)
-  return finalAst.program.body.map(expressionStatement => {
-    if (!t.isExpressionStatement(expressionStatement)) {
-      throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
-    }
-    return transformFromNode(expressionStatement, null, babelOptions()).code
-  })
+  return finalAst.program.body
+    .map(expressionStatement => {
+      if (!t.isExpressionStatement(expressionStatement)) {
+        throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
+      }
+      const nodes = t.isSequenceExpression(expressionStatement.expression)
+        ? expressionStatement.expression.expressions
+        : [ expressionStatement.expression ]
+      return nodes.map(node => transformFromNode(node, null, babelOptions()).code)
+    })
 }
 
 /**
@@ -86,6 +90,9 @@ export function fromIdentifierToCallExpression() {
         if (isPipeCallExpression({ callee: path.node })) {
           path.node.object = toCallExpression(path.node.object)
         }
+      },
+      SequenceExpression(path) {
+        path.node.expressions = path.node.expressions.map(toCallExpression)
       },
     },
   }
