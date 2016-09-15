@@ -8,8 +8,9 @@
   "main": "lib/index.js",
   "bin": "lib/cli.js",
   "scripts": {
-    "test": "eslint --ignore-path=.gitignore . && jest",
-    "prepublish": "babel src --out-dir=lib"
+    "test": "eslint --ignore-path=.gitignore . && jest --bail --coverage --no-cache",
+    "prepublish": "babel src --out-dir=lib",
+    "dev": "jest --notify --watchAll"
   },
   "engines": {
     "node": ">=4"

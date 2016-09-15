@@ -15,8 +15,6 @@ class Template extends Transform {
 
 export default function cheerPluginTransformTemplate() {
   return {
-    cheer: {
-      template: Template,
-    },
+    template: Template,
   }
 }

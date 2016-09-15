@@ -1,6 +1,6 @@
 import { Readable } from 'stream'
 
-class Raw extends Readable {
+class Env extends Readable {
   constructor() {
     super({ objectMode: true })
   }
@@ -10,10 +10,10 @@ class Raw extends Readable {
   }
 }
 
-export default function cheerPluginReadableRaw() {
+export default function cheerPluginReadableEnv() {
   return {
-    cheer: {
-      raw: Raw,
+    process: {
+      env: Env,
     },
   }
 }

@@ -51,8 +51,6 @@ class Open extends Readable {
 
 export default function cheerPluginReadableOpen() {
   return {
-    cheer: {
-      open: Open,
-    },
+    open: Open,
   }
 }

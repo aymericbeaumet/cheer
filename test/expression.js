@@ -37,12 +37,30 @@ describe('expand()', () => {
     ])
   })
 
-  it('should expand from BinaryExpression to .pipe() with left associativity', () => {
+  it('should expand from MemberExpression to CallExpression', () => {
+    expect(expand(`
+      a.b
+    `)).toEqual([
+      'a.b();',
+    ])
+  })
+
+  it('should expand from BinaryExpression to .pipe() (with left associativity)', () => {
     expect(expand(`
       a() | b()
       a() | b() | c()
     `)).toEqual([
       'a().pipe(b());',
+      'a().pipe(b()).pipe(c());',
+    ])
+  })
+
+  it('should expand from a mix of BinaryExpression and .pipe() (with left associativity)', () => {
+    expect(expand(`
+      a().pipe(b()) | c;
+      (a | b).pipe(c);
+    `)).toEqual([
+      'a().pipe(b()).pipe(c());',
       'a().pipe(b()).pipe(c());',
     ])
   })
@@ -111,29 +129,35 @@ describe('expand()', () => {
     expect(expand(`
       -1;
       +1;
+      -' ';
     `)).toEqual([
       'raw(-1);',
       'raw(+1);',
+      'raw(-" ");',
     ])
   })
 
   it('should expand TemplateLiteral to the template plugin if at least one expression', () => {
     expect(expand(`
-\`
-one expression: \${1}
-\`
+      \`one expression: \${1}\`
     `)).toEqual([
-      'template("\\none expression: ${1}\\n");', // eslint-disable-line no-template-curly-in-string
+      'template("one expression: ${1}");', // eslint-disable-line no-template-curly-in-string
     ])
   })
 
   it('should expand TemplateLiteral to the raw plugin if no expressions', () => {
     expect(expand(`
-\`
-no expressions
-\`
+      \`no expressions\`
     `)).toEqual([
-      'raw("\\nno expressions\\n");',
+      'raw("no expressions");',
+    ])
+  })
+
+  it('should support nested MemberExpression', () => {
+    expect(expand(`
+      a.b.c | d.e.f | g.h.i | \`\${name}\`
+    `)).toEqual([
+      'a.b.c().pipe(d.e.f()).pipe(g.h.i()).pipe(template("${name}"));', // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -150,22 +174,6 @@ no expressions
       identifier([], true, false, null, -1, 0, +1, {}, /regex/, "", \`\`)
     `)).toEqual([
       'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``);',
-    ])
-  })
-
-  it('should not expand object from MemberExpression ', () => {
-    expect(expand(`
-      a.b
-    `)).toEqual([
-      'a.b;',
-    ])
-  })
-
-  it('should not expand Identifier from CallExpression arguments', () => {
-    expect(expand(`
-      a(b)
-    `)).toEqual([
-      'a(b);',
     ])
   })
 })

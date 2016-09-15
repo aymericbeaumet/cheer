@@ -13,8 +13,6 @@ class Raw extends Readable {
 
 export default function cheerPluginReadableRaw() {
   return {
-    cheer: {
-      raw: Raw,
-    },
+    raw: Raw,
   }
 }

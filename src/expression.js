@@ -2,6 +2,8 @@ import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
 import { isEmpty, sortBy } from 'lodash'
 
+const STREAM_PIPE = 'pipe'
+
 /**
  * Leverage the Babel toolchain to sequentially apply transformations. Return an
  * array of string, split by root ExpressionStatement. See the plugins
@@ -11,10 +13,11 @@ import { isEmpty, sortBy } from 'lodash'
  */
 export function expand(code) {
   const pluginsSequence = [
-    prependDirectivesAsStringLiteral,
-    allowIdentifierAsCallExpression,
-    wrapLiteral,
-    allowPipeOperatorAsStreamPipe,
+    fromDirectiveToStringLiteral,
+    fromBinaryExpressionPipeToStreamPipe,
+    fromIdentifierToCallExpression,
+    fromMemberExpressionToCallExpression,
+    fromLiteralToWrapper,
   ]
   const finalAst = pluginsSequence.reduce((ast, plugin) =>
     transformFromAst(ast, null, babelOptions({
@@ -34,7 +37,7 @@ export function expand(code) {
  * Reinject the Directive's as StringLiteral's.
  * @return {Object} - the babel plugin options
  */
-export function prependDirectivesAsStringLiteral() {
+export function fromDirectiveToStringLiteral() {
   return {
     visitor: {
       Program(path) {
@@ -59,25 +62,79 @@ export function prependDirectivesAsStringLiteral() {
 }
 
 /**
- * Transform the Identifier which are not callee of a CallExpression into a
- * CallExpression.
- * Syntactic sugar for `a` instead of `a()`
- * @return {Object} - the babel plugin options
  */
-export function allowIdentifierAsCallExpression() {
-  const toCallExpression = identifier => {
-    const callee = identifier
-    const args = []
-    return t.isIdentifier(identifier) ? t.callExpression(callee, args) : identifier
+export function fromIdentifierToCallExpression() {
+  const toCallExpression = node => {
+    return t.isIdentifier(node) ? t.callExpression(node, []) : node
   }
   return {
     visitor: {
-      BinaryExpression(path) {
-        path.node.left = toCallExpression(path.node.left)
-        path.node.right = toCallExpression(path.node.right)
+      Program(path) {
+        path.node.body = path.node.body.map(child =>
+          t.isExpressionStatement(child) ? t.expressionStatement(toCallExpression(child.expression)) : child
+        )
       },
-      ExpressionStatement(path) {
-        path.node.expression = toCallExpression(path.node.expression)
+      CallExpression(path) {
+        if (isPipeCallExpression(path.node)) {
+          path.node.arguments = path.node.arguments.map(toCallExpression)
+        }
+      },
+      MemberExpression(path) {
+        if (isPipeCallExpression({ callee: path.node })) {
+          path.node.object = toCallExpression(path.node.object)
+        }
+      },
+    },
+  }
+}
+
+/**
+ */
+export function fromMemberExpressionToCallExpression() {
+  const toCallExpression = node => {
+    return t.isMemberExpression(node, { computed: false })
+      ? t.callExpression(node, [])
+      : node
+  }
+  return {
+    visitor: {
+      CallExpression(path) {
+        if (t.isMemberExpression(path.node.callee, { computed: false }) &&
+            t.isIdentifier(path.node.callee.property, { name: 'pipe' })) {
+          path.node.callee.object = toCallExpression(path.node.callee.object)
+          path.node.arguments = path.node.arguments.map(toCallExpression)
+        }
+      },
+      MemberExpression(path) {
+        if (t.isExpressionStatement(path.parentPath.node)) {
+          path.replaceWith(toCallExpression(path.node))
+        }
+      },
+    },
+  }
+}
+
+/**
+ * Recursively tranform the `|` binary operator into a `.pipe()` call (left
+ * precedence).
+ * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
+ * @return {Object} - the babel plugin options
+ */
+export function fromBinaryExpressionPipeToStreamPipe() {
+  return {
+    visitor: {
+      BinaryExpression: {
+        exit(path) {
+          if (!t.isBinaryExpression(path.node, { operator: '|' })) {
+            return
+          }
+          path.replaceWith(
+            t.callExpression(
+              t.memberExpression(path.node.left, t.identifier(STREAM_PIPE), false),
+              [ path.node.right ]
+            )
+          )
+        },
       },
     },
   }
@@ -89,7 +146,7 @@ export function allowIdentifierAsCallExpression() {
  * instead of `template('${name}')`
  * @return {Object} - the babel plugin options
  */
-export function wrapLiteral() {
+export function fromLiteralToWrapper() {
   const wrap = node => {
     switch (node.type) {
       case 'ArrayExpression':
@@ -126,49 +183,25 @@ export function wrapLiteral() {
   }
   return {
     visitor: {
-      BinaryExpression(path) {
-        path.node.left = wrap(path.node.left)
-        path.node.right = wrap(path.node.right)
-      },
       Program(path) {
-        path.node.body = path.node.body.map(child => {
-          if (t.isExpressionStatement(child)) {
-            return t.expressionStatement(wrap(child.expression))
-          }
-          return child
-        })
+        path.node.body = path.node.body.map(child =>
+          t.isExpressionStatement(child) ? t.expressionStatement(wrap(child.expression)) : child
+        )
+      },
+      CallExpression(path) {
+        if (isPipeCallExpression(path.node)) {
+          path.node.arguments = path.node.arguments.map(wrap)
+        }
       },
     },
   }
 }
 
 /**
- * Tranform the `|` binary operator between two CallExpression or Identifier
- * into a `.pipe()` call (left precedence).
- * Syntactic sugar for `a() | b()` instead of `a().pipe(b())`
- * @return {Object} - the babel plugin options
  */
-export function allowPipeOperatorAsStreamPipe() {
-  return {
-    visitor: {
-      BinaryExpression: {
-        exit(path) {
-          if (t.isBinaryExpression(path.node, { operator: '|' }) &&
-              t.isCallExpression(path.node.left) &&
-              t.isCallExpression(path.node.right)) {
-            path.replaceWith(t.callExpression(
-              t.memberExpression(
-                path.node.left,
-                t.identifier('pipe'),
-                false
-              ),
-              [ path.node.right ]
-            ))
-          }
-        },
-      },
-    },
-  }
+function isPipeCallExpression(node) {
+  return t.isMemberExpression(node.callee, { computed: false }) &&
+         t.isIdentifier(node.callee.property, { name: STREAM_PIPE })
 }
 
 /**
