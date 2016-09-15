@@ -12,7 +12,7 @@ const readFile = promisify(fs.readFile)
  * Galvanize several files.
  * @param {String[]} files - the files to iterate on
  * @param {Object=} options - the options
- * @return {Bluebird} - resolved with an array of results
+ * @return {Promise<String[]>} - resolved with an array of results
  */
 export function fromFiles(files, options = {}) {
   return map(files, function mapFile(file) {
@@ -22,6 +22,7 @@ export function fromFiles(files, options = {}) {
 
 /**
  * Galvanize a single file.
+ * @return {Promise<String>} - description
  */
 export async function fromFile(file, {
   cwd = process.cwd(),
@@ -38,7 +39,7 @@ export async function fromFile(file, {
 /**
  * Galvanize an input.
  * @param {String|Buffer} buffer - the input to galvanize
- * @return {String} - the galvanized input
+ * @return {Promise<String>} - the galvanized input
  */
 export async function fromBuffer(buffer, {
   cwd = process.cwd(),

@@ -30,7 +30,7 @@ export default function tokenize(input) {
 
 /**
  */
-export class Token {
+class Token {
   constructor(props) {
     Object.assign(this, props)
   }

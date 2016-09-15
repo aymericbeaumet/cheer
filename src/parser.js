@@ -36,7 +36,7 @@ export default function parse(tokens) {
   return File.from(tokens, cursor)
 }
 
-export class Node {
+class Node {
   constructor({ raw, ...props }) {
     Object.defineProperty(this, 'raw', {
       configurable: true,
