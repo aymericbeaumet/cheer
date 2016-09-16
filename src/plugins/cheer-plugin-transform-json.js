@@ -18,7 +18,7 @@ class JSON extends Transform {
   }
 }
 
-export default function cheerPluginTransformJson() {
+export default function cheerPluginTransformJSON() {
   return {
     json: (...args) => new JSON(...args),
   }
