@@ -49,12 +49,12 @@ npm install ---global cheer
 
 <!---
   '```bash'
-  '$ cheer ---help'
+  '$ cheer --help'
   shell('./lib/cli.js --help')
   '```'
 --->
 ```bash
-$ cheer ---help
+$ cheer --help
 
   Galvanize your files with dynamic content
 
