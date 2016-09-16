@@ -6,6 +6,8 @@ import { File, Block, ExpressionsStatements, Text } from './parser'
  * Generate an output from an AST.
  * @param {Object} root - the root node
  * @param {Object=} options - options to be passed to the generators
+ * @param {Object=} plugins - the plugins to inject when evaluating the
+ * expressions
  * @return {Promise<String>} - the output
  */
 export default async function generate(node, options = {}) {
