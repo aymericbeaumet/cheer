@@ -11,7 +11,7 @@
     "dev": "jest --watch --onlyChanged --no-cache --notify",
     "test": "eslint --ignore-path=.gitignore . && jest --bail --coverage --no-cache --verbose && npm run cheer -- --lint",
     "prepublish": "babel src --out-dir=lib",
-    "cheer": "cheer readme.md"
+    "cheer": "npm run prepublish && ./lib/cli.js readme.md"
   },
   "engines": {
     "node": ">=4"
