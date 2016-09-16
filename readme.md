@@ -43,7 +43,7 @@ jsdoc
   '```'
 --->
 ```bash
-npm install ---global cheer
+npm install --global cheer
 ```
 <!--->
 
