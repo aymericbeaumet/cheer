@@ -18,7 +18,7 @@ class YAML extends Transform {
   }
 }
 
-export default function cheerPluginTransformyaml() {
+export default function cheerPluginTransformYAML() {
   return {
     yaml: (...args) => new YAML(...args),
   }
