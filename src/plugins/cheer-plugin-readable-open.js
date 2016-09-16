@@ -20,9 +20,10 @@ class Open extends Readable {
     if (this.pending) {
       return
     }
-    switch (this.options.protocol) {
+    const { protocol } = this.options
+    switch (protocol) {
       case 'file:':
-        const filepath = resolve(process.cwd(), this.options.href.slice(this.options.protocol.length))
+        const filepath = resolve(process.cwd(), this.options.href.slice(`${protocol}/`.length))
         readFile(filepath, (error, buffer) => {
           if (error) {
             return this.emit('error', error)
@@ -33,7 +34,7 @@ class Open extends Readable {
         return this.pending = true
       case 'http:':
       case 'https:':
-        const { request } = this.options.protocol === 'http:' ? http : https
+        const { request } = protocol === 'http:' ? http : https
         request(this.options, response => {
           let data = ''
           response
@@ -49,7 +50,7 @@ class Open extends Readable {
           .end()
         return this.pending = true
       default:
-        return this.emit('error', new Error(`Unsupported protocol: ${this.options.protocol}`))
+        return this.emit('error', new Error(`Unsupported protocol: ${protocol}`))
     }
   }
 }
