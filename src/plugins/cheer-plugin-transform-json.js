@@ -1,8 +1,8 @@
 import { Transform } from 'stream'
-import JSON5 from 'json5'
+import { parse } from 'json5'
 import { get } from 'lodash'
 
-class Json extends Transform {
+class JSON extends Transform {
   constructor(path = '') {
     super({ objectMode: true })
     this.path = path
@@ -10,7 +10,7 @@ class Json extends Transform {
   _transform(text, _, done) {
     let object = null
     try {
-      object = JSON5.parse(text)
+      object = parse(text)
     } catch (error) {
       return done(error)
     }
@@ -20,6 +20,6 @@ class Json extends Transform {
 
 export default function cheerPluginTransformJson() {
   return {
-    json: (...args) => new Json(...args),
+    json: (...args) => new JSON(...args),
   }
 }
