@@ -9,8 +9,9 @@
   "bin": "lib/cli.js",
   "scripts": {
     "dev": "jest --watch --onlyChanged --no-cache --notify",
-    "test": "eslint --ignore-path=.gitignore . && jest --bail --coverage --no-cache --verbose",
-    "prepublish": "babel src --out-dir=lib"
+    "test": "eslint --ignore-path=.gitignore . && jest --bail --coverage --no-cache --verbose && npm run cheer -- --lint",
+    "prepublish": "babel src --out-dir=lib",
+    "cheer": "cheer readme.md"
   },
   "engines": {
     "node": ">=4"
