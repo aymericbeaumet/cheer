@@ -4,6 +4,7 @@ import open from './cheer-plugin-readable-open'
 import raw from './cheer-plugin-readable-raw'
 import json from './cheer-plugin-transform-json'
 import template from './cheer-plugin-transform-template'
+import yaml from './cheer-plugin-transform-yaml'
 import stringify from './cheer-plugin-writable-stringify'
 
 /**
@@ -19,6 +20,7 @@ export default function plugins() {
     // transform
     json,
     template,
+    yaml,
     // writable
     stringify,
   ]
