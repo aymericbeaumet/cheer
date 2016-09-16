@@ -18,8 +18,8 @@ describe('expand()', () => {
       a;
       b;
     `)).toEqual([
-      [ 'a();' ],
-      [ 'b();' ],
+      [ 'a().pipe(stringify());' ],
+      [ 'b().pipe(stringify());' ],
     ])
   })
 
@@ -29,9 +29,9 @@ describe('expand()', () => {
       e.pipe(f), g | h()
       i, j
     `)).toEqual([
-      [ 'a().pipe(b());', 'c().pipe(d());' ],
-      [ 'e().pipe(f());', 'g().pipe(h());' ],
-      [ 'i();', 'j();' ],
+      [ 'a().pipe(b()).pipe(stringify());', 'c().pipe(d()).pipe(stringify());' ],
+      [ 'e().pipe(f()).pipe(stringify());', 'g().pipe(h()).pipe(stringify());' ],
+      [ 'i().pipe(stringify());', 'j().pipe(stringify());' ],
     ])
   })
 
@@ -39,7 +39,7 @@ describe('expand()', () => {
     expect(expand(`
       'use strict'
     `)).toEqual([
-      [ 'raw("use strict");' ],
+      [ 'raw("use strict").pipe(stringify());' ],
     ])
   })
 
@@ -48,8 +48,8 @@ describe('expand()', () => {
       a | b
       a
     `)).toEqual([
-      [ 'a().pipe(b());' ],
-      [ 'a();' ],
+      [ 'a().pipe(b()).pipe(stringify());' ],
+      [ 'a().pipe(stringify());' ],
     ])
   })
 
@@ -57,7 +57,7 @@ describe('expand()', () => {
     expect(expand(`
       a.b
     `)).toEqual([
-      [ 'a.b();' ],
+      [ 'a.b().pipe(stringify());' ],
     ])
   })
 
@@ -66,8 +66,8 @@ describe('expand()', () => {
       a() | b()
       a() | b() | c()
     `)).toEqual([
-      [ 'a().pipe(b());' ],
-      [ 'a().pipe(b()).pipe(c());' ],
+      [ 'a().pipe(b()).pipe(stringify());' ],
+      [ 'a().pipe(b()).pipe(c()).pipe(stringify());' ],
     ])
   })
 
@@ -76,8 +76,8 @@ describe('expand()', () => {
       a().pipe(b()) | c;
       (a | b).pipe(c);
     `)).toEqual([
-      [ 'a().pipe(b()).pipe(c());' ],
-      [ 'a().pipe(b()).pipe(c());' ],
+      [ 'a().pipe(b()).pipe(c()).pipe(stringify());' ],
+      [ 'a().pipe(b()).pipe(c()).pipe(stringify());' ],
     ])
   })
 
@@ -85,7 +85,7 @@ describe('expand()', () => {
     expect(expand(`
       []
     `)).toEqual([
-      [ 'raw([]);' ],
+      [ 'raw([]).pipe(stringify());' ],
     ])
   })
 
@@ -94,8 +94,8 @@ describe('expand()', () => {
       true
       false
     `)).toEqual([
-      [ 'raw(true);' ],
-      [ 'raw(false);' ],
+      [ 'raw(true).pipe(stringify());' ],
+      [ 'raw(false).pipe(stringify());' ],
     ])
   })
 
@@ -103,7 +103,7 @@ describe('expand()', () => {
     expect(expand(`
       null
     `)).toEqual([
-      [ 'raw(null);' ],
+      [ 'raw(null).pipe(stringify());' ],
     ])
   })
 
@@ -111,7 +111,7 @@ describe('expand()', () => {
     expect(expand(`
       0
     `)).toEqual([
-      [ 'raw(0);' ],
+      [ 'raw(0).pipe(stringify());' ],
     ])
   })
 
@@ -119,7 +119,7 @@ describe('expand()', () => {
     expect(expand(`
       ({})
     `)).toEqual([
-      [ 'raw({});' ],
+      [ 'raw({}).pipe(stringify());' ],
     ])
   })
 
@@ -127,7 +127,7 @@ describe('expand()', () => {
     expect(expand(`
       /foobar/
     `)).toEqual([
-      [ 'raw(/foobar/);' ],
+      [ 'raw(/foobar/).pipe(stringify());' ],
     ])
   })
 
@@ -136,8 +136,8 @@ describe('expand()', () => {
       'foo'
       "bar"
     `)).toEqual([
-      [ 'raw("foo");' ],
-      [ 'raw("bar");' ],
+      [ 'raw("foo").pipe(stringify());' ],
+      [ 'raw("bar").pipe(stringify());' ],
     ])
   })
 
@@ -147,9 +147,9 @@ describe('expand()', () => {
       +1;
       -' ';
     `)).toEqual([
-      [ 'raw(-1);' ],
-      [ 'raw(+1);' ],
-      [ 'raw(-" ");' ],
+      [ 'raw(-1).pipe(stringify());' ],
+      [ 'raw(+1).pipe(stringify());' ],
+      [ 'raw(-" ").pipe(stringify());' ],
     ])
   })
 
@@ -157,7 +157,7 @@ describe('expand()', () => {
     expect(expand(`
       \`one expression: \${1}\`
     `)).toEqual([
-      [ 'template("one expression: ${1}");' ], // eslint-disable-line no-template-curly-in-string
+      [ 'template("one expression: ${1}").pipe(stringify());' ], // eslint-disable-line no-template-curly-in-string
     ])
   })
 
@@ -165,7 +165,7 @@ describe('expand()', () => {
     expect(expand(`
       \`no expressions\`
     `)).toEqual([
-      [ 'raw("no expressions");' ],
+      [ 'raw("no expressions").pipe(stringify());' ],
     ])
   })
 
@@ -173,7 +173,7 @@ describe('expand()', () => {
     expect(expand(`
       a.b.c | d.e.f | g.h.i | \`\${name}\`
     `)).toEqual([
-      [ 'a.b.c().pipe(d.e.f()).pipe(g.h.i()).pipe(template("${name}"));' ], // eslint-disable-line max-len, no-template-curly-in-string
+      [ 'a.b.c().pipe(d.e.f()).pipe(g.h.i()).pipe(template("${name}")).pipe(stringify());' ], // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -181,7 +181,7 @@ describe('expand()', () => {
     expect(expand(`
       open('./package.json') | json | \`npm install --global \${name}\`
     `)).toEqual([
-      [ 'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}"));' ], // eslint-disable-line max-len, no-template-curly-in-string
+      [ 'open("./package.json").pipe(json()).pipe(template("npm install --global ${name}")).pipe(stringify());' ], // eslint-disable-line max-len, no-template-curly-in-string
     ])
   })
 
@@ -189,7 +189,7 @@ describe('expand()', () => {
     expect(expand(`
       identifier([], true, false, null, -1, 0, +1, {}, /regex/, "", \`\`)
     `)).toEqual([
-      [ 'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``);' ],
+      [ 'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``).pipe(stringify());' ],
     ])
   })
 })

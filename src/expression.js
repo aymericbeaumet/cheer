@@ -5,6 +5,9 @@ import Promise from 'bluebird'
 import { isArray, isEmpty, sortBy } from 'lodash'
 
 const STREAM_PIPE = 'pipe'
+const PLUGIN_RAW = 'raw'
+const PLUGIN_TEMPLATE = 'template'
+const PLUGIN_STRINGIFY = 'stringify'
 
 /**
  * Interpret the given expression.
@@ -40,6 +43,7 @@ export function expand(code) {
     fromIdentifierToCallExpression,
     fromMemberExpressionToCallExpression,
     fromLiteralToWrapper,
+    appendStringify,
   ]
   const finalAst = pluginsSequence.reduce((ast, plugin) =>
     transformFromAst(ast, null, babelOptions({
@@ -191,14 +195,14 @@ export function fromLiteralToWrapper() {
       case 'RegExpLiteral':
       case 'StringLiteral':
       case 'UnaryExpression': {
-        const callee = t.identifier('raw')
+        const callee = t.identifier(PLUGIN_RAW)
         const args = [
           node,
         ]
         return t.callExpression(callee, args)
       }
       case 'TemplateLiteral': {
-        const callee = t.identifier(isEmpty(node.expressions) ? 'raw' : 'template')
+        const callee = t.identifier(isEmpty(node.expressions) ? PLUGIN_RAW : PLUGIN_TEMPLATE)
         const args = [
           t.stringLiteral(
             transformFromNode(node, null, babelOptions())
@@ -226,6 +230,29 @@ export function fromLiteralToWrapper() {
         if (isPipeCallExpression(path.node)) {
           path.node.arguments = path.node.arguments.map(wrap)
         }
+      },
+    },
+  }
+}
+
+/**
+ */
+export function appendStringify() {
+  const toCallExpression = node => {
+    return t.callExpression(
+      t.memberExpression(node, t.identifier(STREAM_PIPE), false),
+      [ t.callExpression(t.identifier(PLUGIN_STRINGIFY), []) ]
+    )
+  }
+  return {
+    visitor: {
+      ExpressionStatement(path) {
+        if (t.isCallExpression(path.node.expression)) {
+          path.node.expression = toCallExpression(path.node.expression)
+        }
+      },
+      SequenceExpression(path) {
+        path.node.expressions = path.node.expressions.map(toCallExpression)
       },
     },
   }
