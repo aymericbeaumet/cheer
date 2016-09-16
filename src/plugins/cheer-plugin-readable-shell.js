@@ -21,6 +21,7 @@ class Shell extends Readable {
       this.push(stdout.toString())
       this.push(null)
     })
+    this.pending = true
   }
 }
 
