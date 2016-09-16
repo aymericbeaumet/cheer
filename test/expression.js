@@ -192,4 +192,12 @@ describe('expand()', () => {
       [ 'identifier([],true,false,null,-1,0,+1,{},/regex/,"",``).pipe(stringify());' ],
     ])
   })
+
+  it('should support the chaining of several raw expressions', () => {
+    expect(expand(`
+      'a', 'b'
+    `)).toEqual([
+      [ 'raw("a").pipe(stringify());', 'raw("b").pipe(stringify());' ],
+    ])
+  })
 })

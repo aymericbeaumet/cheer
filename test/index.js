@@ -21,4 +21,17 @@ test
 []
 <!--->`)
   })
+
+  it('should insert one line between ExpressionStatement', async function() {
+    expect(await fromBuffer(`<!--- 'a'; 'b'; ---><!--->`)).toEqual(`<!--- 'a'; 'b'; --->
+a
+b
+<!--->`)
+  })
+
+  it('should not insert anything between SequenceExpression', async function() {
+    expect(await fromBuffer(`<!--- 'a', 'b' ---><!--->`)).toEqual(`<!--- 'a', 'b' --->
+ab
+<!--->`)
+  })
 })

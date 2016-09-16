@@ -231,6 +231,9 @@ export function fromLiteralToWrapper() {
           path.node.arguments = path.node.arguments.map(wrap)
         }
       },
+      SequenceExpression(path) {
+        path.node.expressions = path.node.expressions.map(wrap)
+      },
     },
   }
 }
