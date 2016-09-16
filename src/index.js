@@ -8,6 +8,7 @@ import parse from './parser'
 import plugins from './plugins'
 
 const readFile = promisify(fs.readFile)
+const writeFile = promisify(fs.writeFile)
 
 /**
  * Galvanize several files.
@@ -30,12 +31,13 @@ export async function fromFile(file, {
   ...options,
 } = {}) {
   const filepath = resolve(cwd, file)
-  const filecontent = await readFile(filepath)
-  return fromBuffer(filecontent, {
+  const input = await readFile(filepath)
+  const output = await fromBuffer(input, {
     cwd: dirname(filepath),
     filepath,
     ...options,
   })
+  return await writeFile(filepath, output)
 }
 
 /**
