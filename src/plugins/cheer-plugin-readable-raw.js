@@ -1,18 +1,18 @@
 import { Readable } from 'stream'
 
 class Raw extends Readable {
-  constructor(...values) {
+  constructor(value) {
     super({ objectMode: true })
-    this.values = values
+    this.value = value
   }
   _read() {
-    this.push(this.values)
+    this.push(this.value)
     this.push(null)
   }
 }
 
 export default function cheerPluginReadableRaw() {
   return {
-    raw: Raw,
+    raw: (...args) => new Raw(...args),
   }
 }

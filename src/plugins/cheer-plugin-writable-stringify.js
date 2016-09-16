@@ -19,6 +19,6 @@ class Stringify extends Writable {
 
 export default function cheerPluginWritableStringify() {
   return {
-    stringify: Stringify,
+    stringify: (...args) => new Stringify(...args),
   }
 }

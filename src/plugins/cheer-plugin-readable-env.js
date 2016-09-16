@@ -13,7 +13,7 @@ class Env extends Readable {
 export default function cheerPluginReadableEnv() {
   return {
     process: {
-      env: Env,
+      env: (...args) => new Env(...args),
     },
   }
 }

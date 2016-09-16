@@ -5,7 +5,7 @@ class Template extends Transform {
   constructor(...templateStrings) {
     super({ objectMode: true })
     this.compiled = template(templateStrings.join(''), {
-      interpolate: /\${([\s\S]+?)}/g,
+      interpolate: /\${([\s\S]+)}/g,
     })
   }
   _transform(chunk, _, done) {
@@ -15,6 +15,6 @@ class Template extends Transform {
 
 export default function cheerPluginTransformTemplate() {
   return {
-    template: Template,
+    template: (...args) => new Template(...args),
   }
 }

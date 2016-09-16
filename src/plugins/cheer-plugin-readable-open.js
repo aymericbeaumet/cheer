@@ -9,28 +9,34 @@ import { merge } from 'lodash'
 class Open extends Readable {
   constructor(url, options = {}) {
     super({ objectMode: true })
+    this.pending = false
     this.options = merge({}, parse(url), options)
-    this.options.protocol = this.options.protocol || 'file:'
+    if (!this.options.protocol) {
+      this.options.protocol = this.options.protocol || 'file:'
+      this.options.href = `${this.options.protocol}/${this.options.href}`
+    }
   }
   _read() {
-    switch (this.protocol) {
+    if (this.pending) {
+      return
+    }
+    switch (this.options.protocol) {
       case 'file:':
-        const filepath = resolve(process.cwd(), this.options.pathname)
-        return readFile(filepath, (error, buffer) => {
+        const filepath = resolve(process.cwd(), this.options.href.slice(this.options.protocol.length))
+        readFile(filepath, (error, buffer) => {
           if (error) {
-            return this.push(error)
+            return this.emit('error', error)
           }
-          return this.push(null, buffer.toString())
+          this.push(buffer.toString())
+          this.push(null)
         })
+        return this.pending = true
       case 'http:':
       case 'https:':
-        const { request } = this.options.protocol === 'http' ? http : https
-        request(this.options, (response) => {
+        const { request } = this.options.protocol === 'http:' ? http : https
+        request(this.options, response => {
           let data = ''
           response
-            .on('error', (error) => {
-              this.push(error)
-            })
             .on('data', (chunk) => {
               data += chunk
             })
@@ -39,18 +45,17 @@ class Open extends Readable {
               this.push(null)
             })
         })
-          .on('error', (error) => {
-            this.push(error)
-          })
+          .on('error', this.emit.bind(this, 'error'))
           .end()
+        return this.pending = true
       default:
-        return this.push(new Error(`Unsupported protocol: ${this.options.protocol}`))
+        return this.emit('error', new Error(`Unsupported protocol: ${this.options.protocol}`))
     }
   }
 }
 
 export default function cheerPluginReadableOpen() {
   return {
-    open: Open,
+    open: (...args) => new Open(...args),
   }
 }

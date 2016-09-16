@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash'
-import expand from './expression'
+import { expand } from './expression'
 import * as t from './lexer'
 
 /**

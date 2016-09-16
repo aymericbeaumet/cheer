@@ -1,17 +1,39 @@
+import { runInNewContext } from 'vm'
 import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
-import { isEmpty, sortBy } from 'lodash'
+import Promise from 'bluebird'
+import { isArray, isEmpty, sortBy } from 'lodash'
 
 const STREAM_PIPE = 'pipe'
 
 /**
- * Leverage the Babel toolchain to sequentially apply transformations. Return an
+ * Interpret the given expression.
+ * @param {String} expression - the expression to interpret
+ * @param {Object=} options
+ * @param {Object=} options.plugins - the plugins the expression is allowed to
+ * access
+ */
+export function interpret(expression, { plugins = {} } = {}) {
+  return new Promise((resolve, reject) => {
+    const code = expression
+    const context = {
+      ...plugins,
+    }
+    const stream = runInNewContext(code, context)
+    stream
+      .on('error', reject)
+      .once('finish', () => resolve(stream.toString()))
+  })
+}
+
+/**
+ * Expand the Babel toolchain to sequentially apply transformations. Return an
  * array of string, split by root ExpressionStatement. See the plugins
  * documentation below.
  * @param {String} code - the code to expand
  * @return {String} - the expanded code
  */
-export default function expand(code) {
+export function expand(code) {
   const pluginsSequence = [
     fromDirectiveToStringLiteral,
     fromBinaryExpressionPipeToStreamPipe,

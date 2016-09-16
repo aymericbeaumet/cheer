@@ -5,6 +5,7 @@ import { map, promisify } from 'bluebird'
 import generate from './generator'
 import tokenize from './lexer'
 import parse from './parser'
+import plugins from './plugins'
 
 const readFile = promisify(fs.readFile)
 
@@ -32,6 +33,7 @@ export async function fromFile(file, {
   const filecontent = await readFile(filepath)
   return fromBuffer(filecontent, {
     cwd: dirname(filepath),
+    filepath,
     ...options,
   })
 }
@@ -59,7 +61,7 @@ export async function fromBuffer(buffer, {
   if (printAst) {
     printObjectToStdoutAndExit(ast)
   }
-  const output = await generate(ast, { cwd, linebreak })
+  const output = await generate(ast, { linebreak, plugins: plugins() })
   if (lint && input !== output) {
     throw new LinterError(`${filepath || 'Input'} is outdated`)
   }
