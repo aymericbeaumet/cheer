@@ -52,7 +52,7 @@ class JSDoc extends Readable {
     return [
       this.formatTitle(comment),
       '',
-      this.formatDescription(comment.description).join('\n\n'),
+      this.formatDescription(comment.description),
       '',
       this.formatArguments(comment.params),
       '',
@@ -79,10 +79,17 @@ class JSDoc extends Readable {
     const indent = Array(level + 1).join('  ')
     const name = arg.name
     const type = this.formatType(arg.type)
+    const default_ = !arg.default
+      ? ''
+      : ' = ' + this.formatDefault(arg.default)
     const description = !arg.description
       ? ''
-      : ' &#x2014; ' + upperFirst(this.formatDescription(arg.description).join(' '))
-    return `${indent}- **${name}**: <code><em>${type}</em></code>${description}`
+      : ' &#x2014; ' + this.formatDescription(arg.description)
+    const properties = (arg.properties || []).map(p => this.formatArgument(p, { level: level + 1 }))
+    return [
+      `${indent}- **${name}**: <code><em>${type}</em></code>${default_}${description}`,
+      ...properties,
+    ].join('\n')
   }
 
   formatReturns(returns) {
@@ -93,16 +100,30 @@ class JSDoc extends Readable {
     const type = this.formatType(ret.type)
     const description = !ret.description
       ? ''
-      : ' &#x2014; ' + upperFirst(this.formatDescription(ret.description).join(' '))
+      : ' &#x2014; ' + this.formatDescription(ret.description)
     return `Returns <code><em>${type}</em></code>${description}`
   }
 
   formatDescription(description) {
-    return _(description.children)
+    const concatenated = _(description.children)
       .filter({ type: 'paragraph' })
       .flatMap('children')
-      .filter({ type: 'text' })
-      .map('value')
+      .map(child => {
+        switch (child.type) {
+          case 'inlineCode':
+            return `\`${child.value}\``
+          default:
+            return child.value
+        }
+      })
+      .join(' ')
+      .replace(/[\s]+/g, ' ')
+      .trim()
+    return upperFirst(concatenated)
+  }
+
+  formatDefault(default_) {
+    return `\`${default_}\``
   }
 
   formatType(type) {
@@ -110,14 +131,19 @@ class JSDoc extends Readable {
       return this.formatType({ type: 'NameExpression', name: 'any' })
     }
     switch (type.type) {
-      case 'TypeApplication':
-      case 'OptionalType': {
+      case 'TypeApplication': {
         const expression = this.formatType(type.expression)
         const applications = type.applications ? `&lt;${type.applications.map(::this.formatType).join('|')}&gt;` : ''
         return `${expression}${applications}`
       }
+      case 'OptionalType': {
+        return `${this.formatType({ ...type, type: 'TypeApplication' })}`
+      }
       case 'UnionType': {
         return type.elements.map(::this.formatType).join('|')
+      }
+      case 'RestType': {
+        return `...${this.formatType({ type: 'NameExpression', name: 'any' })}`
       }
       case 'NameExpression': {
         switch (type.name.toLowerCase().trim()) {
