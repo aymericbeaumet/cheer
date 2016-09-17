@@ -31,12 +31,12 @@ npm install --global cheer
 ## CLI
 
 <!---
-  '```bash'
+  '```'
   '$ cheer --help'
   shell('./lib/cli.js --help')
   '```'
 --->
-```bash
+```
 $ cheer --help
 
   Galvanize your files with dynamic content
@@ -61,45 +61,39 @@ $ cheer --help
 <!--- jsdoc('src/index.js', { hlevel: 3, tags: { title: 'public' } }) --->
 ### `fromFiles(files, options)`
 
-Galvanize several files.
+This convenience method allows to call the `fromFile` method with an array of filepaths. The calls are performed in parallel.
 
-##### Arguments
+- **files**: <code><em>[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;</em></code> &#x2014; The paths of the files to iterate on
+- **options**: <code><em>[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)</em></code> &#x2014; The options to pass down to `fromFile`
 
-- **files** _([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;)_: The files to iterate on
-- **options** _([Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object))_: The options
-
-##### Returns
-
-- _([Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;&gt;)_: Resolved with an array of results
-
+Returns <code><em>[Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;&gt;</em></code> &#x2014; Resolving when all the `fromFile` calls are done with success.
 
 ### `fromFile(file, $1)`
 
-Galvanize a single file.
+This convenience method allows to call the `fromBuffer` method with a filepath. The current working directory ( `options.cwd` ) is set to the filepath directory.
 
-##### Arguments
+- **file**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)</em></code> &#x2014; The path of the file to galvanize
+- **$1**: <code><em>[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)</em></code> &#x2014; The options passed down to `fromBuffer`
+  - **$1.cwd**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)</em></code> &#x2014; The current working directory from which the file should be resolved, set to the file directory before calling `fromBuffer`
+  - **$1.options**: <code><em>...[any](https://flowtype.org/docs/quick-reference.html#any)</em></code>
 
-- **file** _([any](https://flowtype.org/docs/quick-reference.html#any))_
-- **$1** _([Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object))_
-
-##### Returns
-
-- _([Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;)_: Description
-
+Returns <code><em>[Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;</em></code> &#x2014; Resolving when the `fromBuffer` call is done with success, along with overwriting the filepath with the result.
 
 ### `fromBuffer(buffer, $1)`
 
-Galvanize an input.
+Take an input buffer and return a new transformed buffer with all the expressions executed and the results injected into the new buffer.
 
-##### Arguments
+- **buffer**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|[buffer.Buffer](https://nodejs.org/api/buffer.html#buffer_class_buffer)</em></code> &#x2014; The input to galvanize
+- **$1**: <code><em>[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)</em></code> &#x2014; The options
+  - **$1.cwd**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)</em></code> &#x2014; The current working directory
+  - **$1.dryRun**: <code><em>[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)</em></code> &#x2014; Write the output to stdout and exit
+  - **$1.filepath**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)</em></code> &#x2014; Used by some plugins
+  - **$1.linebreak**: <code><em>[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)</em></code> &#x2014; Which linebreak character should be used, inferred from the buffer by default
+  - **$1.lint**: <code><em>[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)</em></code> &#x2014; Check the file for outdated content, and exit with the appropriate error code. Meant to be used in a CI or in `npm run prepublish`
+  - **$1.printAst**: <code><em>[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)</em></code> &#x2014; Print the parser AST to stdout and exit
+  - **$1.printTokens**: <code><em>[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)</em></code> &#x2014; Print the lexer tokens to stdout and exit
 
-- **buffer** _([string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|[buffer.Buffer](https://nodejs.org/api/buffer.html#buffer_class_buffer))_: The input to galvanize
-- **$1** _([Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object))_
-
-##### Returns
-
-- _([Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;)_: The galvanized input
-
+Returns <code><em>[Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)&lt;[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)&gt;</em></code> &#x2014; Resolving a new transformed buffer.
 <!--->
 
 ## Changelog
