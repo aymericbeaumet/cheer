@@ -2,7 +2,7 @@ import { join } from 'path'
 import { Readable } from 'stream'
 import { promisify } from 'bluebird'
 import { build, formats } from 'documentation'
-import _, { castArray, escape, find, findIndex, isEmpty, unary, upperFirst } from 'lodash'
+import _, { castArray, find, findIndex, isEmpty, unary, upperFirst } from 'lodash'
 
 const buildAsync = promisify(build)
 const formatsMdAsync = promisify(formats.md)
@@ -57,7 +57,6 @@ class JSDoc extends Readable {
       this.formatArguments(comment.params),
       '',
       this.formatReturns(comment.returns),
-      '',
     ].join('\n')
   }
 
@@ -71,12 +70,8 @@ class JSDoc extends Readable {
   }
 
   formatArguments(args) {
-    const h = Array((this.hlevel + 2) + 1).join('#')
-    const formatted = args.map(::this.formatArgument)
     return [
-      `${h} Arguments`,
-      '',
-      ...formatted,
+      ...args.map(::this.formatArgument),
     ].join('\n')
   }
 
@@ -86,27 +81,20 @@ class JSDoc extends Readable {
     const type = this.formatType(arg.type)
     const description = !arg.description
       ? ''
-      : ': ' + upperFirst(this.formatDescription(arg.description).join(' '))
-    return `${indent}- **${name}** _(${type})_${escape(description)}`
+      : ' &#x2014; ' + upperFirst(this.formatDescription(arg.description).join(' '))
+    return `${indent}- **${name}**: <code><em>${type}</em></code>${description}`
   }
 
   formatReturns(returns) {
-    const h = Array((this.hlevel + 2) + 1).join('#')
-    const formatted = returns.map(::this.formatReturn)
-    return [
-      `${h} Returns`,
-      '',
-      ...formatted,
-    ].join('\n')
+    return returns.map(::this.formatReturn).join('\n')
   }
 
-  formatReturn(ret, { level = 0 } = {}) {
-    const indent = Array(level + 1).join('  ')
+  formatReturn(ret) {
     const type = this.formatType(ret.type)
     const description = !ret.description
       ? ''
-      : ': ' + upperFirst(this.formatDescription(ret.description).join(' '))
-    return `${indent}- _(${type})_${escape(description)}`
+      : ' &#x2014; ' + upperFirst(this.formatDescription(ret.description).join(' '))
+    return `Returns <code><em>${type}</em></code>${description}`
   }
 
   formatDescription(description) {
