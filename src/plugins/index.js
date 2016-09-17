@@ -14,7 +14,7 @@ import stringify from './cheer-plugin-writable-stringify'
  * Load the plugins.
  * @return {Object} - the plugins
  */
-export default function plugins() {
+export default function plugins(options) {
   const builtins = [
     // readable
     badge,
@@ -30,5 +30,5 @@ export default function plugins() {
     // writable
     stringify,
   ]
-  return builtins.reduce((acc, plugin) => merge({}, acc, plugin()), {})
+  return builtins.reduce((acc, plugin) => merge({}, acc, plugin(options)), {})
 }

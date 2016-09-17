@@ -7,11 +7,12 @@ import tokenize from './lexer'
 import parse from './parser'
 import plugins from './plugins'
 
-const readFile = promisify(fs.readFile)
-const writeFile = promisify(fs.writeFile)
+const readFileAsync = promisify(fs.readFile)
+const writeFileAsync = promisify(fs.writeFile)
 
 /**
  * Galvanize several files.
+ * @public
  * @param {String[]} files - the files to iterate on
  * @param {Object=} options - the options
  * @return {Promise<String[]>} - resolved with an array of results
@@ -24,6 +25,7 @@ export function fromFiles(files, options = {}) {
 
 /**
  * Galvanize a single file.
+ * @public
  * @return {Promise<String>} - description
  */
 export async function fromFile(file, {
@@ -31,17 +33,18 @@ export async function fromFile(file, {
   ...options,
 } = {}) {
   const filepath = resolve(cwd, file)
-  const input = await readFile(filepath)
+  const input = await readFileAsync(filepath)
   const output = await fromBuffer(input, {
+    ...options,
     cwd: dirname(filepath),
     filepath,
-    ...options,
   })
-  return await writeFile(filepath, output)
+  return await writeFileAsync(filepath, output)
 }
 
 /**
  * Galvanize an input.
+ * @public
  * @param {String|Buffer} buffer - the input to galvanize
  * @return {Promise<String>} - the galvanized input
  */
@@ -63,7 +66,10 @@ export async function fromBuffer(buffer, {
   if (printAst) {
     printObjectToStdoutAndExit(ast)
   }
-  const output = await generate(ast, { linebreak, plugins: plugins() })
+  const output = await generate(ast, {
+    linebreak,
+    plugins: plugins({ cwd, filepath, linebreak }),
+  })
   if (lint && input !== output) {
     throw new LinterError(`${filepath || 'Input'} is outdated`)
   }
