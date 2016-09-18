@@ -1,11 +1,10 @@
 <!---
-  open('./package.json') | json | `# ${name} `, badge([
-    'travis',
-    'npm/v',
-    { subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' },
-  ], { shields: true })
+  open('./package.json') | json | `# ${name} `,
+  badge('travis'),
+  badge('npm/v'),
+  badge({ subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' })
 --->
-# cheer badge
+# cheer badgebadgebadge
 <!--->
 
 <!--- open('./package.json') | json | `> ${description}` --->
@@ -52,7 +51,6 @@ $ cheer --help
 
   Example
     $ cheer readme.md
-
 ```
 <!--->
 
