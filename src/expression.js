@@ -1,7 +1,8 @@
+import { Readable, Transform } from 'stream'
 import { runInNewContext } from 'vm'
 import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
-import Promise from 'bluebird'
+import getStream from 'get-stream'
 import { isArray, isEmpty, sortBy } from 'lodash'
 
 const STREAM_PIPE = 'pipe'
@@ -17,16 +18,15 @@ const PLUGIN_STRINGIFY = 'stringify'
  * access
  */
 export function interpret(expression, { plugins = {} } = {}) {
-  return new Promise((resolve, reject) => {
-    const code = expression
-    const context = {
-      ...plugins,
-    }
-    const stream = runInNewContext(code, context)
-    stream
-      .on('error', reject)
-      .once('finish', () => resolve(stream.toString()))
-  })
+  const code = expression
+  const context = {
+    ...plugins,
+  }
+  const stream = runInNewContext(code, context)
+  if (!(stream instanceof Readable || stream instanceof Transform)) {
+    return Promise.reject(new Error('The stream should be a Readable or a Transform'))
+  }
+  return getStream(stream)
 }
 
 /**
@@ -276,13 +276,14 @@ function isPipeCallExpression(node) {
  * @param {...Object=} overrides - the overrides
  * @return {Object} - The babel options
  */
-function babelOptions(...overrides) {
-  return Object.assign({
+function babelOptions(override = {}) {
+  return {
     babelrc: false,
     comments: false,
     compact: true,
     minified: true,
-  }, ...overrides)
+    ...override,
+  }
 }
 
 /**
