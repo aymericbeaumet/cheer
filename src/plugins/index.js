@@ -6,9 +6,9 @@ import open from './cheer-plugin-readable-open'
 import raw from './cheer-plugin-readable-raw'
 import shell from './cheer-plugin-readable-shell'
 import json from './cheer-plugin-transform-json'
+import stringify from './cheer-plugin-transform-stringify'
 import template from './cheer-plugin-transform-template'
 import yaml from './cheer-plugin-transform-yaml'
-import stringify from './cheer-plugin-writable-stringify'
 
 /**
  * Load the plugins.
@@ -25,10 +25,9 @@ export default function plugins(options) {
     shell,
     // transform
     json,
+    stringify,
     template,
     yaml,
-    // writable
-    stringify,
   ]
   return builtins.reduce((acc, plugin) => merge({}, acc, plugin(options)), {})
 }
