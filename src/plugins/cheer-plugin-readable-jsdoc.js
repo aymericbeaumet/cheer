@@ -2,7 +2,7 @@ import { join } from 'path'
 import { Readable } from 'stream'
 import { promisify } from 'bluebird'
 import { build, formats } from 'documentation'
-import _, { castArray, find, findIndex, isEmpty, unary, upperFirst } from 'lodash'
+import _, { castArray, find, findIndex, isEmpty, toArray, unary, upperFirst } from 'lodash'
 
 const buildAsync = promisify(build)
 const formatsMdAsync = promisify(formats.md)
@@ -13,9 +13,7 @@ class JSDoc extends Readable {
     hlevel = 1,
     tags = [],
   } = {}) {
-    super({
-      objectMode: true,
-    })
+    super({ objectMode: true })
     this.indexes = castArray(indexes).map(index => join(cwd, index))
     this.cwd = cwd
     this.hlevel = hlevel
@@ -27,11 +25,15 @@ class JSDoc extends Readable {
       return
     }
     this.pending = true
-    const comments = await this.getComments()
-    const filtered = this.filterComments(comments)
-    const formatted = this.formatComments(filtered)
-    this.push(formatted)
-    this.push(null)
+    try {
+      const comments = await this.getComments()
+      const filtered = this.filterComments(comments)
+      const formatted = this.formatComments(filtered)
+      this.push(formatted)
+      this.push(null)
+    } catch (error) {
+      this.emit('error', error)
+    }
   }
 
   getComments() {
@@ -61,7 +63,7 @@ class JSDoc extends Readable {
   }
 
   formatTitle(comment) {
-    const h = Array((this.hlevel + 0) + 1).join('#')
+    const h = Array(this.hlevel + 1).join('#')
     const path = _(comment.path).map('name').join('.')
     const args = comment.kind !== 'function'
       ? ''
@@ -70,9 +72,7 @@ class JSDoc extends Readable {
   }
 
   formatArguments(args) {
-    return [
-      ...args.map(::this.formatArgument),
-    ].join('\n')
+    return args.map(::this.formatArgument).join('\n')
   }
 
   formatArgument(arg, { level = 0 } = {}) {
@@ -85,7 +85,7 @@ class JSDoc extends Readable {
     const description = !arg.description
       ? ''
       : ' &#x2014; ' + this.formatDescription(arg.description)
-    const properties = (arg.properties || []).map(p => this.formatArgument(p, { level: level + 1 }))
+    const properties = toArray(arg.properties).map(p => this.formatArgument(p, { level: level + 1 }))
     return [
       `${indent}- **${name}**: <code><em>${type}</em></code>${default_}${description}`,
       ...properties,
@@ -105,21 +105,23 @@ class JSDoc extends Readable {
   }
 
   formatDescription(description) {
-    const concatenated = _(description.children)
+    const string = _(description.children)
       .filter({ type: 'paragraph' })
       .flatMap('children')
-      .map(child => {
-        switch (child.type) {
-          case 'inlineCode':
-            return `\`${child.value}\``
-          default:
-            return child.value
-        }
-      })
+      .map(this.formatChild)
       .join(' ')
       .replace(/[\s]+/g, ' ')
       .trim()
-    return upperFirst(concatenated)
+    return upperFirst(string)
+  }
+
+  formatChild(child) {
+    switch (child.type) {
+      case 'inlineCode':
+        return `\`${child.value}\``
+      default:
+        return child.value
+    }
   }
 
   formatDefault(default_) {
@@ -147,10 +149,9 @@ class JSDoc extends Readable {
       }
       case 'NameExpression': {
         switch (type.name.toLowerCase().trim()) {
-          // various
+          // standard
             case 'any':                          return '[any](https://flowtype.org/docs/quick-reference.html#any)'
             case 'void':                         return '[void](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void)'
-          // standard
             // value properties
             case 'infinity':                     return '[Infinity](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity)'
             case 'nan':                          return '[NaN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN)'
@@ -236,12 +237,16 @@ class JSDoc extends Readable {
             // internationalization
             case 'intl':                         return '[Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl)'
             case 'intl.collator':                return '[Intl.Collator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator)'
-            case 'intl.datetimeformat':          return '[Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)'
-            case 'intl.numberformat':            return '[Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)'
+            case      'collator':
+            case 'intl.datetimeformat':
+            case      'datetimeformat':          return '[Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)'
+            case 'intl.numberformat':
+            case      'numberformat':            return '[Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)'
             // non-standard objects
             case 'iterator':                     return '[Iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator)'
             case 'parallelarray':                return '[ParallelArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ParallelArray)'
             case 'stopiteration':                return '[StopIteration](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/StopIteration)'
+          // web api (TODO: https://github.com/aymericbeaumet/cheer/issues/1)
           // node.js
             // buffer
             case 'buffer.buffer':
