@@ -45,6 +45,7 @@
     "babel-types": "^6.15.0",
     "bluebird": "^3.4.6",
     "documentation": "^4.0.0-beta10",
+    "execa": "^0.4.0",
     "get-stream": "^2.3.1",
     "js-yaml": "^3.6.1",
     "json5": "^0.5.0",

@@ -1,27 +1,28 @@
-import { exec } from 'child_process'
 import { Readable } from 'stream'
+import { shell } from 'execa'
 
 class Shell extends Readable {
   constructor(command, options = {}) {
     super({ objectMode: true })
     this.command = command
-    this.options = Object.assign({
-      cwd: process.cwd,
+    this.options = {
+      cwd: process.cwd(),
       env: process.env,
-    }, options)
+      ...options,
+    }
   }
-  _read() {
+  async _read() {
     if (this.pending) {
       return
     }
-    exec(this.command, this.options, (error, stdout, stderr) => {
-      if (error) {
-        return this.emit('error', error)
-      }
-      this.push(stdout.toString())
-      this.push(null)
-    })
     this.pending = true
+    try {
+      const { stdout } = await shell(this.command, this.options)
+      this.push(stdout)
+      this.push(null)
+    } catch (error) {
+      this.emit('error', error)
+    }
   }
 }
 
