@@ -27,7 +27,7 @@ It does support the following features out-of-the-box:
 - JSDoc documentation ([documentation.js](http://documentation.js.org/))
 - Multi-platform shell execution ([execa]https://github.com/sindresorhus/execa))
 
-Loot at this simple example, it:
+Look at this simple example, it:
 
 1. Extracts the commands to execute between <code>&#x3C;!---</code> and <code>---&#x3E;</code>
 2. Downloads the latest `cheer` package information through the [npm registry]http://registry.npmjs.org/)
