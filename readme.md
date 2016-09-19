@@ -12,12 +12,14 @@
 <!--->
 
 Cheer is the missing modern way to do inline templating in your Markdown files
-through an elegant enhanced JavaScript syntax. No more outdated `.md`, `cheer
---lint` has you covered!
+through an elegant enhanced JavaScript syntax. No more outdated `.md`, we have
+you covered!
 
-- **Expressive**: it's just modern JavaScript, with some enhancements for your own convenience
+- **Simple**: it's just JavaScript, with some enhancements for your own convenience
 - **Async-friendly**: support asynchronous calls out of the box
 - **Extensible**: thanks to its plugin system
+- **Neat**: no external templates files
+- **Fast**: all commands are executed in parallel
 
 It does support the following features out-of-the-box:
 
@@ -27,19 +29,24 @@ It does support the following features out-of-the-box:
 
 Loot at this simple example, it:
 
-1. Downloads the `cheer` package information through the [npm registry]http://registry.npmjs.org/)
-2. Parses that raw text as JSON
-3. Injects the parsed JSON into the template string, producing the final result
+1. Extracts the commands to execute between <code>&#x3C;!---</code> and <code>---&#x3E;</code>
+2. Downloads the latest `cheer` package information through the [npm registry]http://registry.npmjs.org/)
+3. Parses that raw text as JSON
+4. Injects the parsed JSON into the template string
+5. Places the final output between <code>---&#x3E;</code> and <code>&#x3C;!---&#x3E;</code>
 
 ```javascript
-<!--- open('http://registry.npmjs.org/cheer') | json | `Latest push: ${time.modified}` --->
-Latest push: 2016-09-05T17:22:07.044Z
+<!--- open('http://registry.npmjs.org/cheer/latest') | json | `Latest push: ${name}@${version}` --->
+Latest push: cheer@0.0.1
 <!--->
 ```
 
-Got your attention? Let's [get started](./getting-started.md)!
+Note: the parts in <code>&#x3C;!---</code> and <code>---&#x3E;</code> stays
+prisine, that's the whole point of inline templating, allowing future calls to
+replace the outdated output. This even allows you to add `cheer --lint` to your
+CI, making sure your tests breaks if your documentation is outdated!
 
-...
+Got your attention? Let's [get started](./getting-started.md)!
 
 ## Install
 
