@@ -1,15 +1,43 @@
 <!---
-  open('./package.json') | json | `# ${name} `,
-  badge('travis'),
-  badge('npm/v'),
+  open('./package.json') | json | `# ${name}`, ' ',
+  badge(['travis', { user: 'aymericbeaumet', repo: 'cheer' }]), ' ',
+  badge(['npm/v', { package: 'cheer' }]), ' ',
   badge({ subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' })
 --->
-# cheer badgebadgebadge
+# cheer [![travis](https://img.shields.io/travis/aymericbeaumet/cheer.svg)](https://travis-ci.org/aymericbeaumet/cheer) [![npm/v](https://img.shields.io/npm/v/cheer.svg)](https://www.npmjs.com/package/cheer) [![license | Public Domain](https://img.shields.io/badge/license-Public_Domain-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0)
 <!--->
 
 <!--- open('./package.json') | json | `> ${description}` --->
 > Galvanize your files with dynamic content
 <!--->
+
+Cheer is the missing modern way to do inline templating in your Markdown files
+through an elegant enhanced JavaScript syntax. No more outdated `.md`, `cheer
+--lint` has you covered!
+
+- **Expressive**: it's just modern JavaScript, with some enhancements for your own convenience
+- **Async-friendly**: support asynchronous calls out of the box
+- **Extensible**: thanks to its plugin system
+
+It does support the following features out-of-the-box:
+
+- Badge generation ([Shields.io](http://shields.io))
+- JSDoc documentation ([documentation.js](http://documentation.js.org/))
+- Multi-platform shell execution ([execa]https://github.com/sindresorhus/execa))
+
+Loot at this simple example, it:
+
+1. Downloads the `cheer` package information through the [npm registry]http://registry.npmjs.org/)
+2. Parses that raw text as JSON
+3. Injects the parsed JSON into the template string, producing the final result
+
+```javascript
+<!--- open('http://registry.npmjs.org/cheer') | json | `Latest push: ${time.modified}` --->
+Latest push: 2016-09-05T17:22:07.044Z
+<!--->
+```
+
+Got your attention? Let's [get started](./getting-started.md)!
 
 ...
 
