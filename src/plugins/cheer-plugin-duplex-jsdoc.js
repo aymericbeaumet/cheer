@@ -5,7 +5,6 @@ import { build, formats } from 'documentation'
 import _, { castArray, find, findIndex, isEmpty, toArray, unary, upperFirst } from 'lodash'
 
 const buildAsync = promisify(build)
-const formatsMdAsync = promisify(formats.md)
 
 class JSDoc extends Readable {
   constructor(indexes, {

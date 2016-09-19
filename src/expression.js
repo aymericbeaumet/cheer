@@ -1,4 +1,4 @@
-import { Readable, Transform } from 'stream'
+import { Duplex, Readable, Transform } from 'stream'
 import { runInNewContext } from 'vm'
 import { transform, transformFromAst } from 'babel-core'
 import * as t from 'babel-types'
@@ -17,14 +17,16 @@ const PLUGIN_STRINGIFY = 'stringify'
  * @param {Object=} options.plugins - the plugins the expression is allowed to
  * access
  */
-export function interpret(expression, { plugins = {} } = {}) {
+export function interpret(expression, {
+  plugins = {},
+} = {}) {
   const code = expression
   const context = {
     ...plugins,
   }
   const stream = runInNewContext(code, context)
-  if (!(stream instanceof Readable || stream instanceof Transform)) {
-    return Promise.reject(new Error('The stream should be a Readable or a Transform'))
+  if (!(stream instanceof Duplex || stream instanceof Readable || stream instanceof Transform)) {
+    return Promise.reject(new Error('The stream should either be a Duplex, a Readable or a Transform stream in object mode'))
   }
   return getStream(stream)
 }
