@@ -35,16 +35,16 @@ Loot at this simple example, it:
 4. Injects the parsed JSON into the template string
 5. Places the final output between <code>---&#x3E;</code> and <code>&#x3C;!---&#x3E;</code>
 
-```javascript
+```
 <!--- open('http://registry.npmjs.org/cheer/latest') | json | `Latest push: ${name}@${version}` --->
 Latest push: cheer@0.0.1
 <!--->
 ```
 
-Note: the parts in <code>&#x3C;!---</code> and <code>---&#x3E;</code> stays
-prisine, that's the whole point of inline templating, allowing future calls to
+_Note: the parts in <code>&#x3C;!---</code> and <code>---&#x3E;</code> stays
+pristine, that's the whole point of inline templating, allowing future calls to
 replace the outdated output. This even allows you to add `cheer --lint` to your
-CI, making sure your tests breaks if your documentation is outdated!
+CI, making sure your tests breaks if your documentation is outdated!_
 
 Got your attention? Let's [get started](./getting-started.md)!
 
