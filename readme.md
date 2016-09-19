@@ -8,7 +8,7 @@
 <!--->
 
 <!--- open('./package.json') | json | `> ${description}` --->
-> Galvanize your files with dynamic content
+> :clap: Galvanize your Markdown files with dynamic content
 <!--->
 
 Cheer is the missing modern way to do inline templating in your Markdown files
@@ -73,7 +73,7 @@ npm install --global cheer
 ```
 $ cheer --help
 
-  Galvanize your files with dynamic content
+  :clap: Galvanize your Markdown files with dynamic content
 
   Usage
     $ cheer [options] file...

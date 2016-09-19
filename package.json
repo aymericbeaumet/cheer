@@ -1,7 +1,7 @@
 {
   "name": "cheer",
   "version": "0.0.1",
-  "description": "Galvanize your files with dynamic content",
+  "description": ":clap: Galvanize your Markdown files with dynamic content",
   "files": [
     "lib"
   ],
