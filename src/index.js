@@ -1,7 +1,7 @@
 import fs from 'fs'
-import { dirname, resolve } from 'path'
-import { inspect } from 'util'
-import { map, promisify } from 'bluebird'
+import {dirname, resolve} from 'path'
+import {inspect} from 'util'
+import {map, promisify} from 'bluebird'
 import generate from './generator'
 import tokenize from './lexer'
 import parse from './parser'
@@ -20,7 +20,7 @@ const writeFileAsync = promisify(fs.writeFile)
  * done with success.
  */
 export function fromFiles(files, options = {}) {
-  return map(files, function mapFile(file) {
+  return map(files, file => {
     return fromFile(file, options)
   })
 }
@@ -40,14 +40,14 @@ export function fromFiles(files, options = {}) {
  */
 export async function fromFile(file, {
   cwd = process.cwd(),
-  ...options,
+  ...options
 } = {}) {
   const filepath = resolve(cwd, file)
   const input = await readFileAsync(filepath)
   const output = await fromBuffer(input, {
     ...options,
     cwd: dirname(filepath),
-    filepath,
+    filepath
   })
   return await writeFileAsync(filepath, output)
 }
@@ -77,7 +77,7 @@ export async function fromBuffer(buffer, {
   linebreak = buffer.toString().includes('\r\n') ? '\r\n' : '\n',
   lint = false,
   printAst = false,
-  printTokens = false,
+  printTokens = false
 } = {}) {
   const input = buffer.toString()
   const tokens = tokenize(input)
@@ -90,7 +90,7 @@ export async function fromBuffer(buffer, {
   }
   const output = await generate(ast, {
     linebreak,
-    plugins: plugins({ cwd, filepath, linebreak }),
+    plugins: plugins({cwd, filepath, linebreak})
   })
   if (lint && input !== output) {
     throw new LinterError(`${filepath || 'Input'} is outdated`)
@@ -106,14 +106,14 @@ function printObjectToStdoutAndExit(object) {
     breakLength: 0,
     colors: true,
     depth: Infinity,
-    maxArrayLength: Infinity,
+    maxArrayLength: Infinity
   }))
-  process.exit() // eslint-disable-line xo/no-process-exit
+  process.exit() // eslint-disable-line unicorn/no-process-exit
 }
 
 function printStringToStdoutAndExit(string) {
   process.stdout.write(string)
-  process.exit() // eslint-disable-line xo/no-process-exit
+  process.exit() // eslint-disable-line unicorn/no-process-exit
 }
 
 function LinterError(message) {

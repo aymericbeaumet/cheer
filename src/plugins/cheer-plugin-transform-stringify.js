@@ -1,20 +1,20 @@
-import { Transform } from 'stream'
+import {Transform} from 'stream'
 
 class Stringify extends Transform {
   constructor() {
-    super({ objectMode: true })
+    super({objectMode: true})
   }
   _transform(value, _, done) {
     try {
       return done(null, typeof value === 'string' ? value : JSON.stringify(value))
-    } catch (error) {
-      return done(error)
+    } catch (err) {
+      return done(err)
     }
   }
 }
 
 export default function cheerPluginTransformStringify() {
   return {
-    stringify: (...args) => new Stringify(...args),
+    stringify: (...args) => new Stringify(...args)
   }
 }

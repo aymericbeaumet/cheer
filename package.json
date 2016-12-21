@@ -2,82 +2,58 @@
   "name": "cheer",
   "version": "0.0.1",
   "description": ":clap: Galvanize your Markdown files with dynamic content",
-  "files": [
-    "lib"
+  "keywords": [
+    "template"
   ],
+  "homepage": "https://github.com/aymericbeaumet/cheer",
+  "bugs": "https://github.com/aymericbeaumet/cheer/issues",
+  "license": "CC0-1.0",
+  "author": "Aymeric Beaumet <hi@aymericbeaumet.com> (https://aymericbeaumet.com)",
+  "files": "lib",
   "main": "lib/index.js",
   "bin": "lib/cli.js",
+  "repository": "https://github.com/aymericbeaumet/cheer.git",
   "scripts": {
-    "dev": "jest --watch --onlyChanged --no-cache --notify",
-    "test": "eslint --ignore-path=.gitignore . && jest --bail --coverage --no-cache --verbose && npm run cheer -- --lint",
+    "test": "xo && jest && npm run cheer -- --lint readme.md",
     "prepublish": "babel src --out-dir=lib",
-    "cheer": "npm run prepublish && ./lib/cli.js readme.md"
-  },
-  "engines": {
-    "node": ">=4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aymericbeaumet/cheer.git"
-  },
-  "keywords": [],
-  "author": "Aymeric Beaumet <hi@aymericbeaumet.com> (https://aymericbeaumet.com)",
-  "license": "CC0-1.0",
-  "bugs": {
-    "url": "https://github.com/aymericbeaumet/cheer/issues"
-  },
-  "homepage": "https://github.com/aymericbeaumet/cheer",
-  "devDependencies": {
-    "babel-cli": "^6.14.0",
-    "babel-jest": "^15.0.0",
-    "babel-plugin-transform-async-to-module-method": "^6.8.0",
-    "babel-polyfill": "^6.13.0",
-    "babel-preset-es2015-node4": "^2.1.0",
-    "babel-preset-stage-0": "^6.5.0",
-    "eslint": "^3.4.0",
-    "eslint-config-opinionated": "*",
-    "jest-cli": "^15.1.1",
-    "mock-fs": "^3.11.0",
-    "nock": "^8.0.0"
+    "dev": "jest --watch",
+    "cheer": "npm run prepublish && node ./lib/cli.js"
   },
   "dependencies": {
-    "babel-core": "^6.14.0",
-    "babel-types": "^6.15.0",
+    "babel-core": "^6.21.0",
+    "babel-types": "^6.21.0",
     "bluebird": "^3.4.6",
-    "documentation": "^4.0.0-beta10",
-    "execa": "^0.4.0",
-    "get-stream": "^2.3.1",
-    "js-yaml": "^3.6.1",
-    "json5": "^0.5.0",
-    "lodash": "^4.15.0",
+    "documentation": "^3.0.4",
+    "execa": "^0.5.0",
+    "get-stream": "^3.0.0",
+    "js-yaml": "^3.7.0",
+    "json5": "^0.5.1",
+    "lodash": "^4.17.2",
     "meow": "^3.7.0"
   },
-  "eslintConfig": {
-    "extends": [
-      "opinionated/node"
-    ],
-    "env": {
-      "jest": true
-    }
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-origin": "^1.4.0",
+    "jest-cli": "^18.0.0",
+    "mock-fs": "^3.12.1",
+    "nock": "^9.0.2",
+    "xo": "^0.17.1"
+  },
+  "xo": {
+    "parser": "babel-eslint",
+    "space": 2,
+    "semicolon": false,
+    "esnext": true,
+    "envs": [
+      "node",
+      "jest"
+    ]
   },
   "jest": {
     "coverageDirectory": "coverage",
     "testRegex": "/test/.*"
   },
   "babel": {
-    "plugins": [
-      [
-        "transform-async-to-module-method",
-        {
-          "module": "bluebird",
-          "method": "coroutine"
-        }
-      ]
-    ],
-    "presets": [
-      "stage-0",
-      "es2015-node4"
-    ],
-    "sourceMaps": "inline"
+    "extends": "babel-origin"
   }
 }

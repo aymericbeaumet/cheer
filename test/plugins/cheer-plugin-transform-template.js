@@ -1,7 +1,7 @@
-import { Transform } from 'stream'
+import {Transform} from 'stream'
 import plugins from '../../src/plugins'
 
-const { template } = plugins()
+const {template} = plugins()
 
 describe('template', () => {
   it('should be returned by plugins()', () => {
@@ -14,25 +14,25 @@ describe('template', () => {
 
   it('should take input as object and output an interpolated string', () => {
     return new Promise((resolve, reject) => {
-      const transform = template('a = ${a}')
+      const transform = template('a = ${a}') // eslint-disable-line no-template-curly-in-string
       transform
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toBe('a = value'),
+          expect(data).toBe('a = value')
         ]))
-        .write({ a: 'value' })
+        .write({a: 'value'})
     })
   })
 
   it('should support nested template strings', () => {
     return new Promise((resolve, reject) => {
-      const transform = template('nested? ${`${"yes"}`}')
+      const transform = template('nested? ${`${"yes"}`}') // eslint-disable-line no-template-curly-in-string
       transform
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toBe('nested? yes'),
+          expect(data).toBe('nested? yes')
         ]))
         .write()
     })

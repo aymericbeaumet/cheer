@@ -1,6 +1,6 @@
-import { map } from 'bluebird'
-import { interpret } from './expression'
-import { File, Block, ExpressionsStatements, Text } from './parser'
+import {map} from 'bluebird'
+import {interpret} from './expression'
+import {File, Block, ExpressionsStatements, Text} from './parser'
 
 /**
  * Generate an output from an AST.
@@ -13,7 +13,7 @@ import { File, Block, ExpressionsStatements, Text } from './parser'
 export default async function generate(node, options = {}) {
   const {
     linebreak = '\n',
-    plugins = {},
+    plugins = {}
   } = options
   if (node instanceof File) {
     return (await map(node.body, child => generate(child, options))).join('')
@@ -23,15 +23,15 @@ export default async function generate(node, options = {}) {
       node.header.raw,
       linebreak,
       await generate(node.header.expressions, options),
-      node.footer.raw,
+      node.footer.raw
     ].join('')
   }
   if (node instanceof ExpressionsStatements) {
     return [
-      ...(await map(node.expressions, async function (expressions) {
-        return (await map(expressions, expression => interpret(expression, { plugins }))).join('')
+      ...(await map(node.expressions, async expressions => {
+        return (await map(expressions, expression => interpret(expression, {plugins}))).join('')
       })),
-      '',
+      ''
     ].join(linebreak)
   }
   if (node instanceof Text) {

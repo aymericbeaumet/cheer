@@ -1,7 +1,7 @@
-import { Writable } from 'stream'
+import {Writable} from 'stream'
 import plugins from '../../src/plugins'
 
-const { stringify } = plugins()
+const {stringify} = plugins()
 
 describe('stringify', () => {
   it('should be returned by plugins()', () => {
@@ -18,7 +18,7 @@ describe('stringify', () => {
       writable
         .once('error', reject)
         .once('finish', () => resolve([
-          expect(writable.toString()).toBe('true'),
+          expect(writable.toString()).toBe('true')
         ]))
         .end(true)
     })
@@ -30,14 +30,14 @@ describe('stringify', () => {
       writable
         .once('error', reject)
         .once('finish', () => resolve([
-          expect(writable.toString()).toBe('already a string'),
+          expect(writable.toString()).toBe('already a string')
         ]))
         .end('already a string')
     })
   })
 
   it('should emit errors on JSON.stringify errors', () => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const cyclic = {}
       cyclic.cyclic = cyclic
       const writable = stringify()

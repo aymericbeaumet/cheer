@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { isEmpty } from 'lodash'
+import {isEmpty} from 'lodash'
 import meow from 'meow'
-import { fromFiles } from './'
+import {fromFiles} from './'
 
 const cli = meow(`
   Usage

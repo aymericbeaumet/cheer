@@ -11,6 +11,8 @@
 > :clap: Galvanize your Markdown files with dynamic content
 <!--->
 
+## Introduction
+
 Cheer is the missing modern way to do inline templating in your Markdown files
 through an elegant enhanced JavaScript syntax. No more outdated `.md`, we have
 you covered!
@@ -25,12 +27,12 @@ It does support the following features out-of-the-box:
 
 - Badge generation ([Shields.io](http://shields.io))
 - JSDoc documentation ([documentation.js](http://documentation.js.org/))
-- Multi-platform shell execution ([execa]https://github.com/sindresorhus/execa))
+- Multi-platform shell execution ([execa](https://github.com/sindresorhus/execa))
 
 Look at this simple example, it:
 
 1. Extracts the commands to execute between <code>&#x3C;!---</code> and <code>---&#x3E;</code>
-2. Downloads the latest `cheer` package information through the [npm registry]http://registry.npmjs.org/)
+2. Downloads the latest `cheer` package information through the [npm registry](http://registry.npmjs.org/)
 3. Parses that raw text as JSON
 4. Injects the parsed JSON into the template string
 5. Places the final output between <code>---&#x3E;</code> and <code>&#x3C;!---&#x3E;</code>
@@ -46,7 +48,11 @@ pristine, that's the whole point of inline templating, allowing future calls to
 replace the outdated output. This even allows you to add `cheer --lint` to your
 CI, making sure your tests breaks if your documentation is outdated!_
 
-Got your attention? Let's [get started](./getting-started.md)!
+## Rationale
+
+Who doesn't want to keep its documentation up-to-date?
+
+Got your attention? Let's get started!
 
 ## Install
 
@@ -60,9 +66,7 @@ npm install --global cheer
 ```
 <!--->
 
-## Usage
-
-## CLI
+## Usage - CLI
 
 <!---
   '```'
@@ -89,7 +93,7 @@ $ cheer --help
 ```
 <!--->
 
-## API
+## Usage - API
 
 <!--- jsdoc('src/index.js', { hlevel: 3, tags: { title: 'public' } }) --->
 ### `fromFiles(files, options)`

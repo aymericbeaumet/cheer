@@ -1,8 +1,8 @@
-import { join } from 'path'
-import { Readable } from 'stream'
+import {join} from 'path'
+import {Readable} from 'stream'
 import plugins from '../../src/plugins'
 
-const { jsdoc } = plugins({ cwd: join(__dirname, '../../src') })
+const {jsdoc} = plugins({cwd: join(__dirname, '../../src')})
 
 describe('jsdoc', () => {
   it('should be returned by plugins()', () => {

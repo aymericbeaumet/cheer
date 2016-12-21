@@ -1,9 +1,9 @@
-import { Duplex, Readable, Transform } from 'stream'
-import { runInNewContext } from 'vm'
-import { transform, transformFromAst } from 'babel-core'
+import {Duplex, Readable, Transform} from 'stream'
+import {runInNewContext} from 'vm'
+import {transform, transformFromAst} from 'babel-core'
 import * as t from 'babel-types'
 import getStream from 'get-stream'
-import { isArray, isEmpty, sortBy } from 'lodash'
+import {isEmpty, sortBy} from 'lodash'
 
 const STREAM_PIPE = 'pipe'
 const PLUGIN_RAW = 'raw'
@@ -18,11 +18,11 @@ const PLUGIN_STRINGIFY = 'stringify'
  * access
  */
 export function interpret(expression, {
-  plugins = {},
+  plugins = {}
 } = {}) {
   const code = expression
   const context = {
-    ...plugins,
+    ...plugins
   }
   const stream = runInNewContext(code, context)
   if (!(stream instanceof Duplex || stream instanceof Readable || stream instanceof Transform)) {
@@ -45,12 +45,12 @@ export function expand(code) {
     fromIdentifierToCallExpression,
     fromMemberExpressionToCallExpression,
     fromLiteralToWrapper,
-    appendStringify,
+    appendStringify
   ]
   const finalAst = pluginsSequence.reduce((ast, plugin) =>
     transformFromAst(ast, null, babelOptions({
       code: false,
-      plugins: [ plugin ],
+      plugins: [plugin]
     })).ast
   , transform(code, babelOptions()).ast)
   return finalAst.program.body
@@ -58,9 +58,8 @@ export function expand(code) {
       if (!t.isExpressionStatement(expressionStatement)) {
         throw new ExpressionError('Only ExpressionStatement are allowed as the root nodes')
       }
-      const nodes = t.isSequenceExpression(expressionStatement.expression)
-        ? expressionStatement.expression.expressions
-        : [ expressionStatement.expression ]
+      const nodes = t.isSequenceExpression(expressionStatement.expression) ?
+        expressionStatement.expression.expressions : [expressionStatement.expression]
       return nodes.map(node => transformFromNode(node, null, babelOptions()).code)
     })
 }
@@ -86,10 +85,10 @@ export function fromDirectiveToStringLiteral() {
         path.node.directives.length = 0
         path.node.body = sortBy([
           ...path.node.body,
-          ...directives,
+          ...directives
         ], 'start')
-      },
-    },
+      }
+    }
   }
 }
 
@@ -115,14 +114,14 @@ export function fromIdentifierToCallExpression() {
         }
       },
       MemberExpression(path) {
-        if (isPipeCallExpression({ callee: path.node })) {
+        if (isPipeCallExpression({callee: path.node})) {
           path.node.object = toCallExpression(path.node.object)
         }
       },
       SequenceExpression(path) {
         path.node.expressions = path.node.expressions.map(toCallExpression)
-      },
-    },
+      }
+    }
   }
 }
 
@@ -133,15 +132,13 @@ export function fromIdentifierToCallExpression() {
  */
 export function fromMemberExpressionToCallExpression() {
   const toCallExpression = node => {
-    return t.isMemberExpression(node, { computed: false })
-      ? t.callExpression(node, [])
-      : node
+    return t.isMemberExpression(node, {computed: false}) ? t.callExpression(node, []) : node
   }
   return {
     visitor: {
       CallExpression(path) {
-        if (t.isMemberExpression(path.node.callee, { computed: false }) &&
-            t.isIdentifier(path.node.callee.property, { name: 'pipe' })) {
+        if (t.isMemberExpression(path.node.callee, {computed: false}) &&
+            t.isIdentifier(path.node.callee.property, {name: 'pipe'})) {
           path.node.callee.object = toCallExpression(path.node.callee.object)
           path.node.arguments = path.node.arguments.map(toCallExpression)
         }
@@ -150,8 +147,8 @@ export function fromMemberExpressionToCallExpression() {
         if (t.isExpressionStatement(path.parentPath.node)) {
           path.replaceWith(toCallExpression(path.node))
         }
-      },
-    },
+      }
+    }
   }
 }
 
@@ -165,18 +162,18 @@ export function fromBinaryExpressionPipeToStreamPipe() {
     visitor: {
       BinaryExpression: {
         exit(path) {
-          if (!t.isBinaryExpression(path.node, { operator: '|' })) {
+          if (!t.isBinaryExpression(path.node, {operator: '|'})) {
             return
           }
           path.replaceWith(
             t.callExpression(
               t.memberExpression(path.node.left, t.identifier(STREAM_PIPE), false),
-              [ path.node.right ]
+              [path.node.right]
             )
           )
-        },
-      },
-    },
+        }
+      }
+    }
   }
 }
 
@@ -199,7 +196,7 @@ export function fromLiteralToWrapper() {
       case 'UnaryExpression': {
         const callee = t.identifier(PLUGIN_RAW)
         const args = [
-          node,
+          node
         ]
         return t.callExpression(callee, args)
       }
@@ -213,7 +210,7 @@ export function fromLiteralToWrapper() {
                 +Number('`'.length),
                 -Number('`\n'.length)
               )
-          ),
+          )
         ]
         return t.callExpression(callee, args)
       }
@@ -235,8 +232,8 @@ export function fromLiteralToWrapper() {
       },
       SequenceExpression(path) {
         path.node.expressions = path.node.expressions.map(wrap)
-      },
-    },
+      }
+    }
   }
 }
 
@@ -246,7 +243,7 @@ export function appendStringify() {
   const toCallExpression = node => {
     return t.callExpression(
       t.memberExpression(node, t.identifier(STREAM_PIPE), false),
-      [ t.callExpression(t.identifier(PLUGIN_STRINGIFY), []) ]
+      [t.callExpression(t.identifier(PLUGIN_STRINGIFY), [])]
     )
   }
   return {
@@ -258,8 +255,8 @@ export function appendStringify() {
       },
       SequenceExpression(path) {
         path.node.expressions = path.node.expressions.map(toCallExpression)
-      },
-    },
+      }
+    }
   }
 }
 
@@ -269,8 +266,8 @@ export function appendStringify() {
  * @return {Boolean} - true if a .pipe(), false otherwise
  */
 function isPipeCallExpression(node) {
-  return t.isMemberExpression(node.callee, { computed: false }) &&
-         t.isIdentifier(node.callee.property, { name: STREAM_PIPE })
+  return t.isMemberExpression(node.callee, {computed: false}) &&
+         t.isIdentifier(node.callee.property, {name: STREAM_PIPE})
 }
 
 /**
@@ -284,7 +281,7 @@ function babelOptions(override = {}) {
     comments: false,
     compact: true,
     minified: true,
-    ...override,
+    ...override
   }
 }
 
@@ -299,7 +296,7 @@ function transformFromNode(node, code = null, options = {}) {
   const ast =
     t.file(
       t.program([
-        t.isExpressionStatement(node) ? node : t.expressionStatement(node),
+        t.isExpressionStatement(node) ? node : t.expressionStatement(node)
       ]),
       null,
       null

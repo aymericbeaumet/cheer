@@ -1,7 +1,7 @@
-import { Transform } from 'stream'
+import {Transform} from 'stream'
 import plugins from '../../src/plugins'
 
-const { yaml } = plugins()
+const {yaml} = plugins()
 
 describe('yaml', () => {
   it('should be returned by plugins()', () => {
@@ -19,14 +19,14 @@ describe('yaml', () => {
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toEqual({ foo: 'bar' }),
+          expect(data).toEqual({foo: 'bar'})
         ]))
         .write('foo: bar')
     })
   })
 
   it('should forward YAML syntax errors', () => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const transform = yaml()
       transform
         .once('error', resolve)

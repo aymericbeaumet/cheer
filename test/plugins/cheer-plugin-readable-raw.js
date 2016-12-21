@@ -1,7 +1,7 @@
-import { Readable } from 'stream'
+import {Readable} from 'stream'
 import plugins from '../../src/plugins'
 
-const { raw } = plugins()
+const {raw} = plugins()
 
 describe('raw', () => {
   it('should be returned by plugins()', () => {
@@ -21,7 +21,7 @@ describe('raw', () => {
         .once('readable', () => readable.read())
         .on('data', onData)
         .once('end', () => resolve([
-          expect(onData.mock.calls).toEqual([ [ 'value' ] ]),
+          expect(onData.mock.calls).toEqual([['value']])
         ]))
     })
   })

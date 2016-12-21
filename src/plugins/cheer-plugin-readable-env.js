@@ -1,8 +1,8 @@
-import { Readable } from 'stream'
+import {Readable} from 'stream'
 
 class Env extends Readable {
   constructor() {
-    super({ objectMode: true })
+    super({objectMode: true})
   }
   _read() {
     this.push(process.env) // eslint-disable-line no-process-env
@@ -13,7 +13,7 @@ class Env extends Readable {
 export default function cheerPluginReadableEnv() {
   return {
     process: {
-      env: (...args) => new Env(...args),
-    },
+      env: (...args) => new Env(...args)
+    }
   }
 }

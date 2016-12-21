@@ -1,7 +1,7 @@
-import { Readable } from 'stream'
+import {Readable} from 'stream'
 import plugins from '../../src/plugins'
 
-const { shell } = plugins()
+const {shell} = plugins()
 
 describe('shell', () => {
   it('should be returned by plugins()', () => {
@@ -21,7 +21,7 @@ describe('shell', () => {
         .once('readable', () => readable.read())
         .on('data', onData)
         .once('end', () => resolve([
-          expect(onData.mock.calls).toEqual([ [ 'helloworld\n' ] ])
+          expect(onData.mock.calls).toEqual([['helloworld\n']])
         ]))
     })
   })

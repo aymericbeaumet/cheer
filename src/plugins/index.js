@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import {merge} from 'lodash'
 import jsdoc from './cheer-plugin-duplex-jsdoc'
 import badge from './cheer-plugin-readable-badge'
 import env from './cheer-plugin-readable-env'
@@ -28,7 +28,7 @@ export default function plugins(options) {
     json,
     stringify,
     template,
-    yaml,
+    yaml
   ]
   return builtins.reduce((acc, plugin) => merge({}, acc, plugin(options)), {})
 }

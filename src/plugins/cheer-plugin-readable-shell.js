@@ -1,14 +1,14 @@
-import { Readable } from 'stream'
-import { shell } from 'execa'
+import {Readable} from 'stream'
+import {shell} from 'execa'
 
 class Shell extends Readable {
   constructor(command, options = {}) {
-    super({ objectMode: true })
+    super({objectMode: true})
     this.command = command
     this.options = {
       cwd: process.cwd(),
       env: process.env,
-      ...options,
+      ...options
     }
   }
   async _read() {
@@ -17,17 +17,17 @@ class Shell extends Readable {
     }
     this.pending = true
     try {
-      const { stdout } = await shell(this.command, this.options)
+      const {stdout} = await shell(this.command, this.options)
       this.push(stdout)
       this.push(null)
-    } catch (error) {
-      this.emit('error', error)
+    } catch (err) {
+      this.emit('error', err)
     }
   }
 }
 
 export default function cheerPluginReadableShell() {
   return {
-    shell: (...args) => new Shell(...args),
+    shell: (...args) => new Shell(...args)
   }
 }

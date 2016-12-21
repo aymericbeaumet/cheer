@@ -1,7 +1,7 @@
-import { Readable } from 'stream'
+import {Readable} from 'stream'
 import plugins from '../../src/plugins'
 
-const { process: { env } } = plugins()
+const {process: {env}} = plugins()
 
 describe('env', () => {
   it('should be returned by plugins()', () => {
@@ -23,7 +23,7 @@ describe('env', () => {
         .once('end', () => resolve([
           expect(onData.mock.calls.length).toBe(1),
           expect(onData.mock.calls[0].length).toBe(1),
-          expect(onData.mock.calls[0][0]).toBe(process.env),
+          expect(onData.mock.calls[0][0]).toBe(process.env)
         ]))
     })
   })

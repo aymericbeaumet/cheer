@@ -1,7 +1,7 @@
-import { Transform } from 'stream'
+import {Transform} from 'stream'
 import plugins from '../../src/plugins'
 
-const { json } = plugins()
+const {json} = plugins()
 
 describe('json', () => {
   it('should be returned by plugins()', () => {
@@ -19,7 +19,7 @@ describe('json', () => {
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toEqual({ 'this is': 'json' }),
+          expect(data).toEqual({'this is': 'json'})
         ]))
         .write('{ "this is": "json" }')
     })
@@ -32,7 +32,7 @@ describe('json', () => {
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toEqual({ noquote: 'single quote' }),
+          expect(data).toEqual({noquote: 'single quote'})
         ]))
         .write('{ noquote: \'single quote\' }')
     })
@@ -45,14 +45,14 @@ describe('json', () => {
         .once('error', reject)
         .once('readable', () => transform.read())
         .on('data', data => resolve([
-          expect(data).toEqual('b'),
+          expect(data).toEqual('b')
         ]))
         .write('{ a: [ \'b\' ] }')
     })
   })
 
   it('should throw if a parsing error occurs', () => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const transform = json()
       transform
         .once('error', resolve)

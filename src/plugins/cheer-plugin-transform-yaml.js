@@ -1,18 +1,18 @@
-import { Transform } from 'stream'
-import { load } from 'js-yaml'
-import { get } from 'lodash'
+import {Transform} from 'stream'
+import {load} from 'js-yaml'
+import {get} from 'lodash'
 
 class YAML extends Transform {
   constructor(path = '') {
-    super({ objectMode: true })
+    super({objectMode: true})
     this.path = path
   }
   _transform(text, _, done) {
     let object = null
     try {
       object = load(text)
-    } catch (error) {
-      return done(error)
+    } catch (err) {
+      return done(err)
     }
     return done(null, get(object, this.path, object))
   }
@@ -20,6 +20,6 @@ class YAML extends Transform {
 
 export default function cheerPluginTransformYAML() {
   return {
-    yaml: (...args) => new YAML(...args),
+    yaml: (...args) => new YAML(...args)
   }
 }

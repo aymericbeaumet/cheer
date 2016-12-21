@@ -1,9 +1,9 @@
-import { Readable } from 'stream'
+import {Readable} from 'stream'
 import fs from 'mock-fs'
 import nock from 'nock'
 import plugins from '../../src/plugins'
 
-const { open } = plugins()
+const {open} = plugins()
 
 afterEach(() => {
   fs.restore()
@@ -24,7 +24,7 @@ describe('open', () => {
   })
 
   it('should emit an error when the protocol is not supported', () => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const readable = open('unsupported://url')
       readable
         .once('error', resolve)
@@ -33,12 +33,12 @@ describe('open', () => {
   })
 
   const fileProtocols = [
-    [ 'INFERRED PROTOCOL TO FILE', '' ],
-    [ 'FILE PROTOCOL', 'file:/' ],
+    ['INFERRED PROTOCOL TO FILE', ''],
+    ['FILE PROTOCOL', 'file:/']
   ]
-  fileProtocols.forEach(([ description, protocol ]) => {
+  fileProtocols.forEach(([description, protocol]) => {
     it(`should support ${description} and emit the file content when found`, () => {
-      fs({ '/file/exists': 'filecontent' })
+      fs({'/file/exists': 'filecontent'})
       return new Promise((resolve, reject) => {
         const onData = jest.fn()
         const readable = open(`${protocol}/file/exists`)
@@ -47,13 +47,13 @@ describe('open', () => {
           .once('readable', () => readable.read())
           .on('data', onData)
           .once('end', () => resolve([
-            expect(onData.mock.calls).toEqual([ [ 'filecontent' ] ]),
+            expect(onData.mock.calls).toEqual([['filecontent']])
           ]))
       })
     })
 
     it(`should support ${description} and support relative links`, () => {
-      fs({ 'file/exists': 'filecontent' })
+      fs({'file/exists': 'filecontent'})
       return new Promise((resolve, reject) => {
         const onData = jest.fn()
         const readable = open(`${protocol}file/exists`)
@@ -62,26 +62,26 @@ describe('open', () => {
           .once('readable', () => readable.read())
           .on('data', onData)
           .once('end', () => resolve([
-            expect(onData.mock.calls).toEqual([ [ 'filecontent' ] ]),
+            expect(onData.mock.calls).toEqual([['filecontent']])
           ]))
       })
     })
 
     it(`should support ${description} and emit an error when not found`, () => {
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         const readable = open(`${protocol}/file/doesnt/exist`)
         readable
-          .once('error', error => resolve())
+          .once('error', () => resolve())
           .once('readable', () => readable.read())
       })
     })
   })
 
   const httpProtocols = [
-    [ 'HTTP PROTOCOL', 'http:/' ],
-    [ 'HTTPS PROTOCOL', 'https:/' ],
+    ['HTTP PROTOCOL', 'http:/'],
+    ['HTTPS PROTOCOL', 'https:/']
   ]
-  httpProtocols.forEach(([ description, protocol ]) => {
+  httpProtocols.forEach(([description, protocol]) => {
     it(`should support ${description}, default to GET and emit the body`, () => {
       nock(`${protocol}/foobar.com`).get('/path').reply(200, 'body')
       return new Promise((resolve, reject) => {
@@ -92,7 +92,7 @@ describe('open', () => {
           .once('readable', () => readable.read())
           .on('data', onData)
           .once('end', () => resolve([
-            expect(onData.mock.calls).toEqual([ [ 'body' ] ]),
+            expect(onData.mock.calls).toEqual([['body']])
           ]))
       })
     })
@@ -101,20 +101,20 @@ describe('open', () => {
       nock(`${protocol}/foobar.com`).post('/path').reply(200, 'body')
       return new Promise((resolve, reject) => {
         const onData = jest.fn()
-        const readable = open(`${protocol}/foobar.com/path`, { method: 'POST' })
+        const readable = open(`${protocol}/foobar.com/path`, {method: 'POST'})
         readable
           .once('error', reject)
           .once('readable', () => readable.read())
           .on('data', onData)
           .once('end', () => resolve([
-            expect(onData.mock.calls).toEqual([ [ 'body' ] ]),
+            expect(onData.mock.calls).toEqual([['body']])
           ]))
       })
     })
 
     it(`should support ${description} and emit the request errors`, () => {
       nock(`${protocol}/foobar.com`).get('/path').replyWithError('')
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         const onData = jest.fn()
         const readable = open(`${protocol}/foobar.com/path`)
         readable
