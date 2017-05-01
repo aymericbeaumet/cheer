@@ -5,6 +5,8 @@
   badge({ subject: 'license', status: 'Public Domain', color: 'blue', href: 'https://creativecommons.org/publicdomain/zero/1.0' })
 --->
 # cheer [![travis](https://img.shields.io/travis/aymericbeaumet/cheer.svg)](https://travis-ci.org/aymericbeaumet/cheer) [![npm/v](https://img.shields.io/npm/v/cheer.svg)](https://www.npmjs.com/package/cheer) [![license | Public Domain](https://img.shields.io/badge/license-Public_Domain-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0)
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/aymericbeaumet/cheer.svg)](https://greenkeeper.io/)
 <!--->
 
 <!--- open('./package.json') | json | `> ${description}` --->
